@@ -59,8 +59,6 @@ void setV2(float val)
 
 void adjust_225_175()
 {
-	doLedOff(); 
-	doLedOn();
 
 	if (fabs(fM_VIN) < 10) {
 		return; // low voltage at input
@@ -143,7 +141,6 @@ void adjust_225_175()
 			HRTIM_COMPAREUNIT_1,
 			&compareCfg);
 	}
-	doLedOff();
 }
 
 

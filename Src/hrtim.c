@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -404,6 +404,13 @@ void setCompareB3(int newValue){
 	if (HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_B, HRTIM_COMPAREUNIT_3, &compareCfg) != HAL_OK) {
 		_Error_Handler(__FILE__, __LINE__);
 	}
+}
+void setOutputB2(int OutputLevel)
+{
+	HAL_HRTIM_WaveformSetOutputLevel(&hhrtim1,
+		HRTIM_TIMERINDEX_TIMER_B,
+		HRTIM_OUTPUT_TB2,
+		OutputLevel?HRTIM_OUTPUTLEVEL_ACTIVE:HRTIM_OUTPUTLEVEL_INACTIVE);
 }
 
 /* USER CODE END 1 */

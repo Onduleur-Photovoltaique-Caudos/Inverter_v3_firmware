@@ -411,6 +411,9 @@
     <ClInclude Include="Inc\Measure.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Waveform.h">
+      <Filter>Header files\Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\adc.c">
@@ -650,14 +653,17 @@
     <ClCompile Include="Src\Serial.cpp">
       <Filter>Source files\Src</Filter>
     </ClCompile>
-    <ClCompile Include="Inc\Command.cpp">
-      <Filter>Source files\Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Inc\Measure.cpp">
-      <Filter>Source files\Src</Filter>
-    </ClCompile>
     <ClCompile Include="C:\Users\jluu\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Source\Templates\system_stm32f3xx.c">
       <Filter>Source files\Device-specific files\SystemInit</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Waveform.cpp">
+      <Filter>Source files\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Command.cpp">
+      <Filter>Source files\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Measure.cpp">
+      <Filter>Source files\Src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

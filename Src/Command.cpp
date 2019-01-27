@@ -1,5 +1,6 @@
 #include "Command.h"
 #include "Serial.h"
+#include "gpio.h"
 #include <cstring>
 #include "Measure.h"
 #include "hrtim.h"
@@ -147,50 +148,127 @@ void statusDisplay(void){
 	pSerialOutToConsole->puts(my_itoa(_countT2 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\n\r");
 }
-void setRt(int val){
-	_rt = val;
-	int base = (PERIOD_SWITCH * val) / PER_CENT;
-	_base = base;
-	setCompareA3(PERIOD_SWITCH - _base + _countT1);
-	setCompareMaster1(PERIOD_SWITCH - _base);
-	setCompareB3(base + _countT2);
+void doZ1(void){
+	setCompareA1(_countZ1);
+	setCompareA2(_countZ1 + _countD1);
 }
 void setZ1(int val){
 	int count = val * COUNT_PER_NS;
 	_countZ1 = count;
-	setCompareA1(_countZ1);
-	setCompareA2(_countZ1 + _countD1);
+	doZ1();
+}
+void doZ2(void){
+	setCompareB1(_countZ2);
+	setCompareB2(_countZ2 + _countD2);
 }
 void setZ2(int val)
 {
 	int count = val * COUNT_PER_NS;
 	_countZ2 = count;
-	setCompareB1(_countZ2);
-	setCompareB2(_countZ2 + _countD2);
+	doZ2();
+}
+void doD1(void){
+	setCompareA2(_countZ1 + _countD1);
 }
 void setD1(int val)
 {
 	int count = val * COUNT_PER_NS;
 	_countD1 = count;
-	setCompareA2(_countZ1 + _countD1);
+	doD1();
+}
+void doD2(void){
+	setCompareB2(_countZ2 + _countD2);
 }
 void setD2(int val)
 {
 	int count = val * COUNT_PER_NS;
 	_countD2 = count;
-	setCompareB2(_countZ2 + _countD2);
+	doD2();
+}
+void doT1(){
+	setCompareB3(_base + _countT1);
 }
 void setT1(int val)
 {
 	int count = val * COUNT_PER_NS;
 	_countT1 = count;
-	setCompareB3(_base + _countT1);
+	doT1();
+}
+void doT2(void){
+	setCompareA3(PERIOD_SWITCH - _base + _countT2);
 }
 void setT2(int val)
 {
 	int count = val * COUNT_PER_NS;
 	_countT2 = count;
-	setCompareA3(PERIOD_SWITCH - _base + _countT2);
+	doT2();
+}
+void setRt(int valRt)
+{
+	if (valRt > 90)
+		valRt = 100;
+	if (valRt < 10)
+		valRt = 0;
+	int valueA2;
+	int valueB2;
+	int base = (PERIOD_SWITCH * valRt) / PER_CENT;
+	int baseReduction = 0;
+	_base = base;
+	if (_base > PERIOD_SWITCH - 0x20) {
+		_base = PERIOD_SWITCH - 0x20; // otherwise CompareMaster1 does not trigger TIMB
+		baseReduction = 0x20 + base - PERIOD_SWITCH; 
+	}
+	int valueA3 = PERIOD_SWITCH - _base + _countT1;
+	if (valueA3 == PERIOD_SWITCH) {
+		valueA3 = PERIOD_SWITCH + 1; // make sure lower switch is a permanent 1
+	}
+	if (valRt >= _rt) {
+		if (valRt == 100 && _rt != 100) {
+			doLedToggle();
+		}
+		if (valueA3 < _countZ1 + _countD1) {  // otherwise lower switch goes to full conduction !
+			setCompareA2(valueA3);
+		} else {
+			doD1();
+		}
+		setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
+		setCompareMaster1(PERIOD_SWITCH - _base);
+		if (_rt==0) {
+			setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
+		}
+		if (_base < _countZ2 + _countD2) {
+			valueB2 = _base;
+			setCompareB2(valueB2);
+			setOutputB2(0);
+		} else {
+			doD2();
+		}
+		if (_rt != 0) {
+			setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
+		}
+	} else {
+		if (_base < _countZ2 + _countD2) {
+			valueB2 = _base;
+			setCompareB2(valueB2); // must be done before B3
+			setOutputB2(0);
+		} else {
+			doD2();
+		}
+		setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
+		if (_rt == 100) {
+			setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
+		}
+		if (valueA3 < _countZ1 + _countD1) {  // otherwise lower switch goes to full conduction !
+			setCompareA2(valueA3);
+		} else {
+			doD1();
+		}
+		setCompareMaster1(PERIOD_SWITCH - _base);
+		if (_rt == 100){
+			setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
+		}
+	}
+	_rt = valRt;
 }
 commandAndValue getCommand() {
 	commandAndValue result(none, 0);

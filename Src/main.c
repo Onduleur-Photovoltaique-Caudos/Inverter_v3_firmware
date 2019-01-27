@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -50,6 +50,7 @@
 #include <stdbool.h>
 #include "Measure.h"
 #include "Command.h"
+#include "Waveform.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -84,13 +85,19 @@ int g_DMACount = 0;
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim3) {
-		doLedOn();
+		//doLedOn();
+	} else if (htim == &htim15) {
+	//	doLedToggle();
+		doNextWaveformSegment();
 	}
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim3) {
-		doLedOn();
+		//doLedOn();
+	} else if (htim == &htim15) {
+		//doLedToggle();
+		doNextWaveformSegment();
 	}
 }
 
@@ -146,6 +153,7 @@ int main(void)
   MX_HRTIM1_Init();
   MX_TIM2_Init();
   MX_TIM1_Init();
+  MX_TIM15_Init();
 
   /* USER CODE BEGIN 2 */
   	//HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
@@ -171,6 +179,63 @@ int main(void)
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_COMPAREUNIT_1);
 	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TE1);
 
+
+	// Low frequency output switches are connected on timer 1
+
+	#if 0
+	TIM_BreakDeadTimeConfigTypeDef  sBreakDeadTimeConfig;
+	sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+	sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+	sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+	sBreakDeadTimeConfig.DeadTime = 10;
+	sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+	sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+	sBreakDeadTimeConfig.BreakFilter = 0;
+	sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
+	sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
+	sBreakDeadTimeConfig.Break2Filter = 0;
+	sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+	HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig);
+	#endif
+
+#define DEBUG_LOCK_OUTPUT_SWITCHES 0 // fix the output switches to study high frequency switching
+
+#if DEBUG_LOCK_OUTPUT_SWITCHES 
+	TIM_OC_InitTypeDef sConfigOC;
+	sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
+	sConfigOC.Pulse = 0;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+	sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
+	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
+	//HAL_TIMEx_OC_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
+	//HAL_TIMEx_OC_Start(&htim1, TIM_CHANNEL_2); 
+#else
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2); 
+
+
+	// start sine wave synthesis
+	// commenting below line makes a square at 10% voltage
+	// see function doNextWaveformSegment
+	//HAL_TIM_Base_Start_IT(&htim15);
+
+#endif
+
+
 	HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_RESET); // enable everything
 
 	initializeCommand();
@@ -183,7 +248,8 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+	  doNextWaveformSegment();
+	
 	  peekProcessCommand();
 	  HAL_Delay(10);
   }

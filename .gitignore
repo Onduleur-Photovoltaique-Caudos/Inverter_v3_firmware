@@ -9,3 +9,4 @@ VisualGDBCache
 *.old
 *.gpdsc
 
+/Inverter_v3_firmware.VC.db

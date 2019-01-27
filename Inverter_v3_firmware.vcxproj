@@ -188,6 +188,7 @@
     <ClInclude Include="Inc\stm32f3xx_it.h" />
     <ClInclude Include="Inc\tim.h" />
     <ClInclude Include="Inc\usart.h" />
+    <ClInclude Include="Inc\Waveform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C:\Users\jluu\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Source\Templates\system_stm32f3xx.c" />
@@ -259,19 +260,20 @@
     <ClCompile Include="C:\Users\jluu\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F3xxxx\STM32F3xx_HAL_Driver\Src\stm32f3xx_ll_tim.c" />
     <ClCompile Include="C:\Users\jluu\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F3xxxx\STM32F3xx_HAL_Driver\Src\stm32f3xx_ll_usart.c" />
     <ClCompile Include="C:\Users\jluu\AppData\Local\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32\STM32F3xxxx\STM32F3xx_HAL_Driver\Src\stm32f3xx_ll_utils.c" />
-    <ClCompile Include="Inc\Command.cpp" />
-    <ClCompile Include="Inc\Measure.cpp" />
     <ClCompile Include="Src\adc.c" />
+    <ClCompile Include="Src\Command.cpp" />
     <ClCompile Include="Src\crc.c" />
     <ClCompile Include="Src\dma.c" />
     <ClCompile Include="Src\gpio.c" />
     <ClCompile Include="Src\hrtim.c" />
     <ClCompile Include="Src\main.c" />
+    <ClCompile Include="Src\Measure.cpp" />
     <ClCompile Include="Src\Serial.cpp" />
     <ClCompile Include="Src\stm32f3xx_hal_msp.c" />
     <ClCompile Include="Src\stm32f3xx_it.c" />
     <ClCompile Include="Src\tim.c" />
     <ClCompile Include="Src\usart.c" />
+    <ClCompile Include="Src\Waveform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="debug.mak" />
