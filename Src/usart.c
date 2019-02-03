@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -43,7 +43,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN 0 */
-
+#ifdef SERIAL_ON
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -128,7 +128,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 } 
 
 /* USER CODE BEGIN 1 */
-
+#endif
 /* USER CODE END 1 */
 
 /**

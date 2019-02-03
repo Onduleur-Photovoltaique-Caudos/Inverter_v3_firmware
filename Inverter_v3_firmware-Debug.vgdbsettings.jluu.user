@@ -12,7 +12,15 @@
       <Syscalls />
     </CatchpointConfiguration>
     <MemoryWindowPreferences />
-    <FavoriteEmbeddedRegisters />
+    <FavoriteEmbeddedRegisters>
+      <string>HRTIM1_MASTER</string>
+      <string>HRTIM1_TIMA</string>
+      <string>HRTIM1_TIMB</string>
+      <string>HRTIM1_MASTER.MCR.PREEN</string>
+      <string>HRTIM1_TIMA.TIMACR.PREEN</string>
+      <string>HRTIM1_TIMB.TIMBCR.PREEN</string>
+      <string>ADC2</string>
+    </FavoriteEmbeddedRegisters>
     <LiveVariables>
       <LiveVariable>
         <Expression>fM_VIN</Expression>
@@ -22,7 +30,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>true</Plot>
+        <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
       <LiveVariable>
@@ -100,6 +108,17 @@
           <Enabled>false</Enabled>
         </Breakpoint>
         <Plot>false</Plot>
+        <IsCollapsed>false</IsCollapsed>
+      </LiveVariable>
+      <LiveVariable>
+        <Expression>countEOC</Expression>
+        <Type>SInt32</Type>
+        <Enabled>true</Enabled>
+        <Breakpoint>
+          <ComparisonMode>Equals</ComparisonMode>
+          <Enabled>false</Enabled>
+        </Breakpoint>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
     </LiveVariables>

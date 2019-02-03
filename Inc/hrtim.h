@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -72,8 +72,18 @@ void setCompareA3(int newValue);
 void setCompareB1(int newValue);
 void setCompareB2(int newValue);
 void setCompareB3(int newValue);
+void setOutputA1(int newValue);
+void setOutputA2(int newValue); 
+void setOutputB1(int newValue);
 void setOutputB2(int newValue);
-
+void doUpdateMAB(void);
+void doUpdateMaster(void);
+void doUpdateTimA(void);
+void doUpdateTimB(void);
+void doOutputSetSourceA1None(void);
+void doOutputSetSourceA1MasterPer(void);
+void doOutputSetSourceB1None(void);
+void doOutputSetSourceB1MasterCMP1(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

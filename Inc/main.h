@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -98,6 +98,8 @@
 #define C_HFH_GPIO_Port GPIOA
 #define H2_LON_Pin GPIO_PIN_12
 #define H2_LON_GPIO_Port GPIOA
+#define SYNC_SERIAL_Pin GPIO_PIN_10
+#define SYNC_SERIAL_GPIO_Port GPIOC
 #define Psense_Pin GPIO_PIN_2
 #define Psense_GPIO_Port GPIOD
 

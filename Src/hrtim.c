@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -72,7 +72,7 @@ void MX_HRTIM1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  pTimeBaseCfg.Period = 0x4000;
+  pTimeBaseCfg.Period = 0x3fff;
   pTimeBaseCfg.RepetitionCounter = 0x00;
   pTimeBaseCfg.PrescalerRatio = HRTIM_PRESCALERRATIO_MUL32;
   pTimeBaseCfg.Mode = HRTIM_MODE_CONTINUOUS;
@@ -90,7 +90,7 @@ void MX_HRTIM1_Init(void)
   pTimerCfg.StartOnSync = HRTIM_SYNCSTART_DISABLED;
   pTimerCfg.ResetOnSync = HRTIM_SYNCRESET_DISABLED;
   pTimerCfg.DACSynchro = HRTIM_DACSYNC_NONE;
-  pTimerCfg.PreloadEnable = HRTIM_PRELOAD_DISABLED;
+  pTimerCfg.PreloadEnable = HRTIM_PRELOAD_ENABLED;
   pTimerCfg.UpdateGating = HRTIM_UPDATEGATING_INDEPENDENT;
   pTimerCfg.BurstMode = HRTIM_TIMERBURSTMODE_MAINTAINCLOCK;
   pTimerCfg.RepetitionUpdate = HRTIM_UPDATEONREPETITION_DISABLED;
@@ -156,7 +156,7 @@ void MX_HRTIM1_Init(void)
   pTimerCfg.FaultLock = HRTIM_TIMFAULTLOCK_READWRITE;
   pTimerCfg.DeadTimeInsertion = HRTIM_TIMDEADTIMEINSERTION_DISABLED;
   pTimerCfg.DelayedProtectionMode = HRTIM_TIMER_A_B_C_DELAYEDPROTECTION_DISABLED;
-  pTimerCfg.UpdateTrigger = HRTIM_TIMUPDATETRIGGER_NONE;
+  pTimerCfg.UpdateTrigger = HRTIM_TIMUPDATETRIGGER_MASTER|HRTIM_TIMUPDATETRIGGER_TIMER_A;
   pTimerCfg.ResetTrigger = HRTIM_TIMRESETTRIGGER_MASTER_PER;
   pTimerCfg.ResetUpdate = HRTIM_TIMUPDATEONRESET_DISABLED;
   if (HAL_HRTIM_WaveformTimerConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, &pTimerCfg) != HAL_OK)
@@ -167,6 +167,7 @@ void MX_HRTIM1_Init(void)
   pTimerCfg.DMASrcAddress = 0x0000;
   pTimerCfg.DMADstAddress = 0x0000;
   pTimerCfg.DMASize = 0x1;
+  pTimerCfg.UpdateTrigger = HRTIM_TIMUPDATETRIGGER_MASTER|HRTIM_TIMUPDATETRIGGER_TIMER_B;
   pTimerCfg.ResetTrigger = HRTIM_TIMRESETTRIGGER_MASTER_CMP1;
   if (HAL_HRTIM_WaveformTimerConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_B, &pTimerCfg) != HAL_OK)
   {
@@ -176,6 +177,8 @@ void MX_HRTIM1_Init(void)
   pTimerCfg.DMASrcAddress = 0x0000;
   pTimerCfg.DMADstAddress = 0x0000;
   pTimerCfg.DMASize = 0x1;
+  pTimerCfg.PreloadEnable = HRTIM_PRELOAD_DISABLED;
+  pTimerCfg.UpdateTrigger = HRTIM_TIMUPDATETRIGGER_NONE;
   pTimerCfg.ResetTrigger = HRTIM_TIMRESETTRIGGER_MASTER_PER;
   if (HAL_HRTIM_WaveformTimerConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_C, &pTimerCfg) != HAL_OK)
   {
@@ -255,7 +258,7 @@ void MX_HRTIM1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  pTimeBaseCfg.Period = 0x4000;
+  pTimeBaseCfg.Period = 0x3fff;
   if (HAL_HRTIM_TimeBaseConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_C, &pTimeBaseCfg) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -405,6 +408,27 @@ void setCompareB3(int newValue){
 		_Error_Handler(__FILE__, __LINE__);
 	}
 }
+void setOutputA1(int OutputLevel)
+{
+	HAL_HRTIM_WaveformSetOutputLevel(&hhrtim1,
+		HRTIM_TIMERINDEX_TIMER_A,
+		HRTIM_OUTPUT_TA1,
+		OutputLevel?HRTIM_OUTPUTLEVEL_ACTIVE:HRTIM_OUTPUTLEVEL_INACTIVE);
+}
+void setOutputA2(int OutputLevel)
+{
+	HAL_HRTIM_WaveformSetOutputLevel(&hhrtim1,
+		HRTIM_TIMERINDEX_TIMER_A,
+		HRTIM_OUTPUT_TA2,
+		OutputLevel?HRTIM_OUTPUTLEVEL_ACTIVE:HRTIM_OUTPUTLEVEL_INACTIVE);
+}
+void setOutputB1(int OutputLevel)
+{
+	HAL_HRTIM_WaveformSetOutputLevel(&hhrtim1,
+		HRTIM_TIMERINDEX_TIMER_B,
+		HRTIM_OUTPUT_TB1,
+		OutputLevel?HRTIM_OUTPUTLEVEL_ACTIVE:HRTIM_OUTPUTLEVEL_INACTIVE);
+}
 void setOutputB2(int OutputLevel)
 {
 	HAL_HRTIM_WaveformSetOutputLevel(&hhrtim1,
@@ -412,7 +436,70 @@ void setOutputB2(int OutputLevel)
 		HRTIM_OUTPUT_TB2,
 		OutputLevel?HRTIM_OUTPUTLEVEL_ACTIVE:HRTIM_OUTPUTLEVEL_INACTIVE);
 }
-
+void doUpdateMAB(void)
+{
+	HAL_HRTIM_SoftwareUpdate(&hhrtim1,
+		HRTIM_TIMERUPDATE_MASTER|HRTIM_TIMERUPDATE_A|HRTIM_TIMERUPDATE_B);
+}
+void doUpdateMaster(void)
+{
+	HAL_HRTIM_SoftwareUpdate(&hhrtim1,
+		HRTIM_TIMERUPDATE_MASTER);
+}
+void doUpdateTimA(void){
+	HAL_HRTIM_SoftwareUpdate(&hhrtim1,
+		HRTIM_TIMERUPDATE_A);
+}
+void doUpdateTimB(void){
+	HAL_HRTIM_SoftwareUpdate(&hhrtim1,
+		HRTIM_TIMERUPDATE_B);
+}
+static void  doOutputSetSource(HRTIM_HandleTypeDef * hhrtim,
+	uint32_t TimerIdx,
+	uint32_t Output,
+	uint32_t SetSource)
+{  
+	switch (Output) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1:
+		{
+		  /* Set the output set/reset crossbar */
+			hhrtim->Instance->sTimerxRegs[TimerIdx].SETx1R = SetSource;
+		}
+		break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2:
+		{
+		  /* Set the output set/reset crossbar */
+			hhrtim->Instance->sTimerxRegs[TimerIdx].SETx2R = SetSource;
+		}
+		break;
+	default:
+		break;
+	}
+  }
+void doOutputSetSourceA1None(void)
+{
+	doOutputSetSource(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_OUTPUT_TA1, HRTIM_OUTPUTSET_NONE); 
+}
+void doOutputSetSourceA1MasterPer(void)
+{
+	doOutputSetSource(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_OUTPUT_TA1, HRTIM_OUTPUTSET_MASTERPER); 
+}
+void doOutputSetSourceB1None(void)
+{
+	doOutputSetSource(&hhrtim1,HRTIM_TIMERINDEX_TIMER_B, HRTIM_OUTPUT_TB1, HRTIM_OUTPUTSET_NONE); 
+}
+void doOutputSetSourceB1MasterCMP1(void)
+{
+	doOutputSetSource(&hhrtim1, HRTIM_TIMERINDEX_TIMER_B, HRTIM_OUTPUT_TB1, HRTIM_OUTPUTSET_MASTERCMP1); 
+}
 /* USER CODE END 1 */
 
 /**

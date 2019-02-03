@@ -1,10 +1,12 @@
 #include "Command.h"
-#include "Serial.h"
 #include "gpio.h"
 #include <cstring>
 #include "Measure.h"
 #include "hrtim.h"
 #include "stdlib.h"
+
+#ifdef SERIAL_ON
+#include "Serial.h"
 
 #define SERIAL_BUFFER_SIZE 50
 static char bufferOutConsole[SERIAL_BUFFER_SIZE];
@@ -16,15 +18,18 @@ static SerialInput SerialInFromConsole(&huart2, bufferInConsole, SERIAL_BUFFER_S
 static SerialOutput* pSerialOutToConsole;
 static SerialInput* pSerialInFromConsole;
 
+#endif
 void initializeCommand()
 {
 	setRt(10);
 	setZ1(150);
 	setZ2(150);
+#if SERIAL_ON
 	pSerialOutToConsole = &SerialOutToConsole;
 	pSerialInFromConsole = &SerialInFromConsole;
 	pSerialInFromConsole->initialize(pSerialOutToConsole);
 	pSerialOutToConsole->puts("Ready\r\n");
+#endif
 }
 
 typedef enum {
@@ -88,7 +93,7 @@ int _countD2 = -5 * COUNT_PER_NS;
 int _countT1 = 0 * COUNT_PER_NS;
 int _countT2 = 0 * COUNT_PER_NS;
 
-#define PERIOD_SWITCH 0x4000
+#define PERIOD_SWITCH 16000
 #define PER_CENT 100
 
 char * my_itoa(int n, int maxVal = 1000000)
@@ -125,6 +130,7 @@ char * my_itoa(int n, int maxVal = 1000000)
 	message[i + 1] = 0;
 	return &message[0];
 }
+#ifdef SERIAL_ON
 void statusDisplay(void){
 	pSerialOutToConsole->puts("    rt\t    z1\t    d1\t    r1\t    t1\t    z2\t    d2\t    r2\t    t2/");
 	pSerialOutToConsole->puts(my_itoa(COUNT_PER_NS,10));
@@ -148,6 +154,8 @@ void statusDisplay(void){
 	pSerialOutToConsole->puts(my_itoa(_countT2 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\n\r");
 }
+#elsevoid statusDisplay(){}
+#endif
 void doZ1(void){
 	setCompareA1(_countZ1);
 	setCompareA2(_countZ1 + _countD1);
@@ -156,6 +164,7 @@ void setZ1(int val){
 	int count = val * COUNT_PER_NS;
 	_countZ1 = count;
 	doZ1();
+	doUpdateTimA();
 }
 void doZ2(void){
 	setCompareB1(_countZ2);
@@ -166,6 +175,7 @@ void setZ2(int val)
 	int count = val * COUNT_PER_NS;
 	_countZ2 = count;
 	doZ2();
+	doUpdateTimB();
 }
 void doD1(void){
 	setCompareA2(_countZ1 + _countD1);
@@ -175,6 +185,7 @@ void setD1(int val)
 	int count = val * COUNT_PER_NS;
 	_countD1 = count;
 	doD1();
+	doUpdateTimA();
 }
 void doD2(void){
 	setCompareB2(_countZ2 + _countD2);
@@ -184,6 +195,7 @@ void setD2(int val)
 	int count = val * COUNT_PER_NS;
 	_countD2 = count;
 	doD2();
+	doUpdateTimB();
 }
 void doT1(){
 	setCompareB3(_base + _countT1);
@@ -193,6 +205,7 @@ void setT1(int val)
 	int count = val * COUNT_PER_NS;
 	_countT1 = count;
 	doT1();
+	doUpdateTimB();
 }
 void doT2(void){
 	setCompareA3(PERIOD_SWITCH - _base + _countT2);
@@ -202,12 +215,13 @@ void setT2(int val)
 	int count = val * COUNT_PER_NS;
 	_countT2 = count;
 	doT2();
+	doUpdateTimA();
 }
 void setRt(int valRt)
 {
-	if (valRt > 90)
+	if (valRt > 92)
 		valRt = 100;
-	if (valRt < 10)
+	if (valRt < 9)
 		valRt = 0;
 	int valueA2;
 	int valueB2;
@@ -222,54 +236,48 @@ void setRt(int valRt)
 	if (valueA3 == PERIOD_SWITCH) {
 		valueA3 = PERIOD_SWITCH + 1; // make sure lower switch is a permanent 1
 	}
-	if (valRt >= _rt) {
-		if (valRt == 100 && _rt != 100) {
-			doLedToggle();
-		}
-		if (valueA3 < _countZ1 + _countD1) {  // otherwise lower switch goes to full conduction !
-			setCompareA2(valueA3);
-		} else {
-			doD1();
-		}
-		setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
-		setCompareMaster1(PERIOD_SWITCH - _base);
-		if (_rt==0) {
-			setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
-		}
-		if (_base < _countZ2 + _countD2) {
-			valueB2 = _base;
-			setCompareB2(valueB2);
-			setOutputB2(0);
-		} else {
-			doD2();
-		}
-		if (_rt != 0) {
-			setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
-		}
+	if (valRt >= _rt && valRt == 92 && _rt != 92) {
+		doLedToggle();
+	}
+	if (_base < _countZ2 + _countD2) { // going to zero
+		valueB2 = _base;
+		setCompareB2(valueB2);
+		setOutputB2(0);
+		setCompareA2(0x20); // use minimum value so we have a set
+		setCompareA3(PERIOD_SWITCH + 0x20);
+		// supporess the ZVS pulses
+		doForceStop(true);
+		doOutputSetSourceA1None(); // lower switch
+		setOutputA1(0); 
+		doOutputSetSourceB1None(); //upper switch
+		setOutputB1(0); 
+	} else if (valueA3 < _countZ1 + _countD1) { // going to 100
+		setCompareA2(0); // less than minimum, so we do not have the set
+		setCompareA3(0x20); // reset immediately
+		setCompareB2(0x20); // set
+		setCompareB3(PERIOD_SWITCH+0x20);
+		// supporess the ZVS pulses
+		doForceStop(true);
+		doOutputSetSourceA1None(); // lower switch
+		setOutputA1(0); 
+		doOutputSetSourceB1None(); //upper switch
+		setOutputB1(0); 
 	} else {
-		if (_base < _countZ2 + _countD2) {
-			valueB2 = _base;
-			setCompareB2(valueB2); // must be done before B3
-			setOutputB2(0);
-		} else {
-			doD2();
+		if (_rt==0 || _rt==100){ // restore the ZVS pulses (use a boolean bNoZVS)
+			doOutputSetSourceA1MasterPer();
+			doOutputSetSourceB1MasterCMP1();
+			doForceStop(false);
 		}
-		setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
-		if (_rt == 100) {
-			setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
-		}
-		if (valueA3 < _countZ1 + _countD1) {  // otherwise lower switch goes to full conduction !
-			setCompareA2(valueA3);
-		} else {
-			doD1();
-		}
+		doZ1(); // sets A1 and A2
+		doZ2(); // sets B1 and B2
 		setCompareMaster1(PERIOD_SWITCH - _base);
-		if (_rt == 100){
-			setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
-		}
+		setCompareB3(base + baseReduction + _countT2); // (CMP3 is reset source, CMP2 set source initialized to 200)
+		setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
 	}
 	_rt = valRt;
+	doUpdateMAB();
 }
+#ifdef SERIAL_ON
 commandAndValue getCommand() {
 	commandAndValue result(none, 0);
 	char strConsole[SERIAL_BUFFER_SIZE];
@@ -332,7 +340,7 @@ commandAndValue getCommand() {
 	}
 	return result;
 }
-
+#endif
 void processCommand(commandAndValue cv)
 {
 	switch (cv.command) {
@@ -371,6 +379,7 @@ void processCommand(commandAndValue cv)
 		;
 	}
 }
+#ifdef SERIAL_ON
 void peekProcessCommand()
 {
 	commandAndValue cv = getCommand();
@@ -379,3 +388,4 @@ void peekProcessCommand()
 	}
 	processCommand(cv);
 }
+#endif

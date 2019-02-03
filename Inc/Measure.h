@@ -18,6 +18,7 @@ extern int g_MeasurementNumber;
 
 void setV1(float val);
 void setV2(float val);
+void doForceStop(bool newValue);
 
 #ifdef __cplusplus
 extern "C"

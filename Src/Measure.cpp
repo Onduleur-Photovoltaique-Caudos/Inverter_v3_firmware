@@ -38,9 +38,12 @@ float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225;
 float ratioV225 = 150.0/400;
 float ratioV175 = 250.0/400;
 
-#define period  16364
+#define period  16000
 static unsigned short compare_225 = period / 2;
 static unsigned short compare_175 = period / 2;
+
+//pid factor
+#define P_factorInv 2
 
 bool stopped_225;
 bool stopped_175;
@@ -57,9 +60,13 @@ void setV2(float val)
 	ratioV175 = val / 400.0;
 }
 
+static bool forceStop;
+
+void doForceStop(bool newValue) {
+	forceStop = newValue;
+}
 void adjust_225_175()
 {
-
 	if (fabs(fM_VIN) < 10) {
 		return; // low voltage at input
 	}
@@ -74,14 +81,14 @@ void adjust_225_175()
 
 	// 225V TE1 PC8 test pin P1
 	// 225 Timer E1 -> PC8  C_225 -> P1 -> U1(2) -> P23(1) -> Q1 L1 Q3 D3 
-	diff = diff_225 * period / 8;
+	diff = diff_225 * period /P_factorInv ;
 	int sign_or_0 = (0 < diff) - (diff < 0);
 	diff =  (diff ? sign_or_0 : 0) + diff * max(compare_225, 96) / 40000;
 
 	compareCfg.CompareValue = min(period - 96, max(95, compare_225 - diff));
 	compare_225 = compareCfg.CompareValue; // remember previous value;
 
-	if (compareCfg.CompareValue < 96) { // force inactive
+	if (compareCfg.CompareValue < 96 || forceStop) { // force inactive
 		stopped_225 = true;
 		HAL_HRTIM_WaveformOutputStop(&hhrtim1,
 			HRTIM_OUTPUT_TE1);
@@ -109,14 +116,14 @@ void adjust_225_175()
 	
 		// 175V TC1 PB12  test pin P2
 		// 175 Timer C1 -> PB12 C_175  -> P2 -> U1(1) -> P24(1) -> Q2 L2 Q4 D4 
-	diff = diff_175 * period / 8;
+	diff = diff_175 * period / P_factorInv *4;
 	sign_or_0 = (0 < diff) - (diff < 0);
 	diff =  (diff ? sign_or_0 : 0) + diff *  max(compare_175, 96) / 40000;
 
 	compareCfg.CompareValue = min(period - 96, max(95, compare_175 + diff));
 	compare_175 = compareCfg.CompareValue;
 
-	if (compareCfg.CompareValue < 96) {
+	if (compareCfg.CompareValue < 96 || forceStop) {
 		stopped_175 = true;
 		HAL_HRTIM_WaveformOutputStop(&hhrtim1,
 			HRTIM_OUTPUT_TC1);
@@ -143,11 +150,19 @@ void adjust_225_175()
 	}
 }
 
-
+static int countEOC;
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 {// end of DMA
-	if (adcHandle == &hadc2) {
+	if (isADC_EOC(adcHandle)){
+		doPsenseOn(); 
+		doPsenseOff(); 
+		countEOC++;
+		return;
+	}
+	if (adcHandle == &hadc2) { // 3 microseconds in optimized mode 8us in debug
+		doSyncSerial(true); // cannot go faster than 100us TODO
+		countEOC = 0;
 		g_MeasurementNumber++;
 		fM_VIN = g_ADCBuffer1[0] *mvFactor1;
 		fM_V225 = g_ADCBuffer1[1] *mvFactor2;
@@ -164,6 +179,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		fM_I175 = g_ADCBuffer2[5] *iFactor; 
 		fM_I225 = g_ADCBuffer2[6] *iFactor; 
 		adjust_225_175();
+		doSyncSerial(false);
 	}
 	
 }

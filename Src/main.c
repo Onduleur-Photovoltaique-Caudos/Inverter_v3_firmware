@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -43,7 +43,6 @@
 #include "dma.h"
 #include "hrtim.h"
 #include "tim.h"
-#include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
@@ -147,7 +146,6 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
-  MX_USART2_UART_Init();
   MX_CRC_Init();
   MX_TIM3_Init();
   MX_HRTIM1_Init();
@@ -162,8 +160,10 @@ int main(void)
 	HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
 	HAL_Delay(10);
 	HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_3);
+	HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_3);
 	HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_1);
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) g_ADCBuffer1, ADC_BUFFER1_LENGTH);
+	//enableADCIT_EOC(&hadc2);
 	HAL_ADC_Start_DMA(&hadc2, (uint32_t*) g_ADCBuffer2, ADC_BUFFER2_LENGTH);
 
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_MASTER, HRTIM_COMPAREUNIT_1);
@@ -231,7 +231,7 @@ int main(void)
 	// start sine wave synthesis
 	// commenting below line makes a square at 10% voltage
 	// see function doNextWaveformSegment
-	//HAL_TIM_Base_Start_IT(&htim15);
+	HAL_TIM_Base_Start_IT(&htim15);
 
 #endif
 
@@ -248,9 +248,10 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  doNextWaveformSegment();
-	
+	  //doNextWaveformSegment();
+#ifdef SERIAL_ON	
 	  peekProcessCommand();
+#endif
 	  HAL_Delay(10);
   }
   /* USER CODE END 3 */
