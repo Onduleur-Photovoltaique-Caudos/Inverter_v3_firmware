@@ -43,7 +43,8 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN 0 */
-#ifdef SERIAL_ON
+#include "main.h"
+#ifdef USE_SERIAL
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;

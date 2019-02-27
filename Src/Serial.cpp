@@ -2,7 +2,7 @@ extern "C" {
 #include "main.h"
 }
 
-#ifdef SERIAL_ON
+#ifdef USE_SERIAL
 #include "Serial.h"
 #include <string.h>
 

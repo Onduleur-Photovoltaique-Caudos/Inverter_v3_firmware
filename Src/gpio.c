@@ -109,7 +109,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = Psense_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(Psense_GPIO_Port, &GPIO_InitStruct);
 
 }
@@ -124,6 +124,15 @@ void doPsenseOff()
 {
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_RESET); 
 }
+void doensePulse()
+{
+	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_SET); 
+	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_RESET); 
+}
+void doPsenseToggle()
+{
+	HAL_GPIO_TogglePin(Psense_GPIO_Port, Psense_Pin); 
+}
 void doSyncOn()
 {
 	HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET); 
@@ -131,6 +140,15 @@ void doSyncOn()
 void doSyncOff()
 {
 	HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET); 
+}
+void doSyncPulse()
+{
+	HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET); 
+	HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET); 
+}
+void doSyncToggle()
+{
+	HAL_GPIO_TogglePin(Sync_GPIO_Port, Sync_Pin); 
 }
 void doLedOn()
 {
@@ -140,7 +158,7 @@ void doLedOff()
 {
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_RESET); 
 }
-void doLed()
+void doLedPulse()
 {
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_SET); 
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_RESET); 
@@ -149,11 +167,18 @@ void doLedToggle()
 {
 	HAL_GPIO_TogglePin(Led_GPIO_Port, Led_Pin); 
 }
-void doSyncSerial(bool bState)
+void doSyncSerialOn()
 {
-	HAL_GPIO_WritePin(SYNC_SERIAL_GPIO_Port,
-		SYNC_SERIAL_Pin,
-		(bState ? GPIO_PIN_SET:GPIO_PIN_RESET)); 
+	HAL_GPIO_WritePin(SYNC_SERIAL_GPIO_Port, SYNC_SERIAL_Pin,GPIO_PIN_SET); 
+}
+void doSyncSerialOff()
+{
+	HAL_GPIO_WritePin(SYNC_SERIAL_GPIO_Port, SYNC_SERIAL_Pin,GPIO_PIN_RESET); 
+}
+void doSyncSerialPulse()
+{
+	HAL_GPIO_WritePin(SYNC_SERIAL_GPIO_Port, SYNC_SERIAL_Pin, GPIO_PIN_SET); 
+	HAL_GPIO_WritePin(SYNC_SERIAL_GPIO_Port, SYNC_SERIAL_Pin, GPIO_PIN_RESET); 
 }
 void doSyncSerialToggle()
 {

@@ -33,6 +33,7 @@ int iCosine[] = { 92,
 };
 
 static int waveformIndex = WAVEFORM_SEGMENTS / 2;
+static bool bPositive;
 
 void doNextWaveformSegment()
 {
@@ -48,7 +49,7 @@ void doNextWaveformSegment()
 			bIncreasing = true;
 		}
 	}
-#if 1
+#if 0
 	int tim1Count = htim1.Instance->CNT;
 	int tim1Period = htim1.Instance->ARR;
 	int nSampleNumber = tim1Count % (tim1Period / 2);

@@ -48,7 +48,7 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-#ifdef SERIAL_ON
+#ifdef USE_SERIAL
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart2;

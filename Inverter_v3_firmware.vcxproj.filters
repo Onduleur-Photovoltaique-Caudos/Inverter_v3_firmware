@@ -414,6 +414,9 @@
     <ClInclude Include="Inc\Waveform.h">
       <Filter>Header files\Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Loop.h">
+      <Filter>Header files\Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\adc.c">
@@ -663,6 +666,9 @@
       <Filter>Source files\Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\Measure.cpp">
+      <Filter>Source files\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Loop.cpp">
       <Filter>Source files\Src</Filter>
     </ClCompile>
   </ItemGroup>

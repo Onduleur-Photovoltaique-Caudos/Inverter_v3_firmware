@@ -43,10 +43,12 @@
 #include "dma.h"
 #include "hrtim.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
+#include "Loop.h"
 #include "Measure.h"
 #include "Command.h"
 #include "Waveform.h"
@@ -56,6 +58,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+volatile int mutexStats;
 
 /* USER CODE END PV */
 
@@ -76,10 +79,31 @@ void delay_us_DWT(int uSec)
 	} while (DWT->CYCCNT - start < cycles);
 }
 
+#define SLOTS 4
+static volatile uint32_t start[4];
+
+void start_us_DWT(int slot)
+{
+	if (slot < SLOTS) {
+		start[slot] = DWT->CYCCNT;
+	}
+}
+
+unsigned int get_us_DWT(int slot)
+{
+	if (slot < SLOTS) {
+		unsigned long long val;
+		if (DWT->CYCCNT < start[slot]) {
+			val = (DWT->CYCCNT - start[slot]) + (1LL << 32);
+		} else {
+			val = (DWT->CYCCNT - start[slot]);
+		}
+		return val * 1000000L / SystemCoreClock;
+	}
+	return 0xFFFFFFFF;
+}
 
 int g_DMACount = 0;
-
-
 
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim){
@@ -152,6 +176,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM1_Init();
   MX_TIM15_Init();
+  MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
   	//HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
@@ -160,11 +185,16 @@ int main(void)
 	HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
 	HAL_Delay(10);
 	HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_3);
-	HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_3);
-	HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	//HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_1);
+#if 0
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) g_ADCBuffer1, ADC_BUFFER1_LENGTH);
-	//enableADCIT_EOC(&hadc2);
+	enableADCIT_EOC(&hadc1);
 	HAL_ADC_Start_DMA(&hadc2, (uint32_t*) g_ADCBuffer2, ADC_BUFFER2_LENGTH);
+#else
+	HAL_ADC_Start(&hadc2);
+	HAL_ADCEx_MultiModeStart_DMA(&hadc1, (uint32_t*) g_ADCBufferM, ADC_BUFFERM_LENGTH * 2);
+#endif
 
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_MASTER, HRTIM_COMPAREUNIT_1);
 	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA1 | HRTIM_OUTPUT_TA2);
@@ -200,27 +230,13 @@ int main(void)
 
 #define DEBUG_LOCK_OUTPUT_SWITCHES 0 // fix the output switches to study high frequency switching
 
-#if DEBUG_LOCK_OUTPUT_SWITCHES 
-	TIM_OC_InitTypeDef sConfigOC;
-	sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
-	sConfigOC.Pulse = 0;
-	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
-		_Error_Handler(__FILE__, __LINE__);
-	}
-	sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
-	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
-		_Error_Handler(__FILE__, __LINE__);
-	}
-
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
-	//HAL_TIMEx_OC_Start(&htim1, TIM_CHANNEL_1); 
+#if 1 
+	//setOutputSlowSwitch(true);
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
-	//HAL_TIMEx_OC_Start(&htim1, TIM_CHANNEL_2); 
+	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
+
 #else
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1); 
@@ -231,7 +247,7 @@ int main(void)
 	// start sine wave synthesis
 	// commenting below line makes a square at 10% voltage
 	// see function doNextWaveformSegment
-	HAL_TIM_Base_Start_IT(&htim15);
+	//HAL_TIM_Base_Start_IT(&htim15);
 
 #endif
 
@@ -248,11 +264,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  //doNextWaveformSegment();
-#ifdef SERIAL_ON	
-	  peekProcessCommand();
-#endif
-	  HAL_Delay(10);
+	  doLoop();
   }
   /* USER CODE END 3 */
 
@@ -294,7 +306,9 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_HRTIM1|RCC_PERIPHCLK_TIM1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_HRTIM1|RCC_PERIPHCLK_TIM1
+                              |RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   PeriphClkInit.Hrtim1ClockSelection = RCC_HRTIM1CLK_PLLCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)

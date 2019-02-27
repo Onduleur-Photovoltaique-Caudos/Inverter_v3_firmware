@@ -1,3 +1,8 @@
+extern "C"
+{
+#include "main.h"
+}
+
 #include "Command.h"
 #include "gpio.h"
 #include <cstring>
@@ -5,7 +10,7 @@
 #include "hrtim.h"
 #include "stdlib.h"
 
-#ifdef SERIAL_ON
+#ifdef USE_SERIAL
 #include "Serial.h"
 
 #define SERIAL_BUFFER_SIZE 50
@@ -18,17 +23,18 @@ static SerialInput SerialInFromConsole(&huart2, bufferInConsole, SERIAL_BUFFER_S
 static SerialOutput* pSerialOutToConsole;
 static SerialInput* pSerialInFromConsole;
 
-#endif
+#endif
+
 void initializeCommand()
 {
 	setRt(10);
 	setZ1(150);
 	setZ2(150);
-#if SERIAL_ON
+#ifdef USE_SERIAL
 	pSerialOutToConsole = &SerialOutToConsole;
 	pSerialInFromConsole = &SerialInFromConsole;
 	pSerialInFromConsole->initialize(pSerialOutToConsole);
-	pSerialOutToConsole->puts("Ready\r\n");
+	pSerialOutToConsole->puts("\r\nReady\r\n");
 #endif
 }
 
@@ -130,7 +136,10 @@ char * my_itoa(int n, int maxVal = 1000000)
 	message[i + 1] = 0;
 	return &message[0];
 }
-#ifdef SERIAL_ON
+#ifdef USE_SERIAL
+void sendSerial(char* message){
+	pSerialOutToConsole->puts(message);
+}
 void statusDisplay(void){
 	pSerialOutToConsole->puts("    rt\t    z1\t    d1\t    r1\t    t1\t    z2\t    d2\t    r2\t    t2/");
 	pSerialOutToConsole->puts(my_itoa(COUNT_PER_NS,10));
@@ -154,7 +163,8 @@ void statusDisplay(void){
 	pSerialOutToConsole->puts(my_itoa(_countT2 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\n\r");
 }
-#elsevoid statusDisplay(){}
+#else
+void statusDisplay(){}
 #endif
 void doZ1(void){
 	setCompareA1(_countZ1);
@@ -277,7 +287,7 @@ void setRt(int valRt)
 	_rt = valRt;
 	doUpdateMAB();
 }
-#ifdef SERIAL_ON
+#ifdef USE_SERIAL
 commandAndValue getCommand() {
 	commandAndValue result(none, 0);
 	char strConsole[SERIAL_BUFFER_SIZE];
@@ -340,7 +350,8 @@ commandAndValue getCommand() {
 	}
 	return result;
 }
-#endif
+#endif
+
 void processCommand(commandAndValue cv)
 {
 	switch (cv.command) {
@@ -379,7 +390,7 @@ void processCommand(commandAndValue cv)
 		;
 	}
 }
-#ifdef SERIAL_ON
+#ifdef USE_SERIAL
 void peekProcessCommand()
 {
 	commandAndValue cv = getCommand();
@@ -388,4 +399,4 @@ void peekProcessCommand()
 	}
 	processCommand(cv);
 }
-#endif
+#endif

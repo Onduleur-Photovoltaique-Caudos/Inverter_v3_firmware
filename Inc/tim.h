@@ -48,7 +48,7 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 extern TIM_HandleTypeDef htim1;
@@ -71,7 +71,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
 
 /* USER CODE BEGIN Prototypes */
-
+void	 setOutputSlowSwitch(bool bPositive);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

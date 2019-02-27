@@ -41,7 +41,7 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
+#define USE_SERIAL
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
@@ -98,12 +98,17 @@
 #define C_HFH_GPIO_Port GPIOA
 #define H2_LON_Pin GPIO_PIN_12
 #define H2_LON_GPIO_Port GPIOA
+#define SYNC_TIM1_ADC_Pin GPIO_PIN_15
+#define SYNC_TIM1_ADC_GPIO_Port GPIOA
 #define SYNC_SERIAL_Pin GPIO_PIN_10
 #define SYNC_SERIAL_GPIO_Port GPIOC
 #define Psense_Pin GPIO_PIN_2
 #define Psense_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
+extern volatile int mutexStats;
+void start_us_DWT(int slot);
+unsigned int get_us_DWT(int slot);
 
 void cpp_ErrorHandler(char *, int);
 

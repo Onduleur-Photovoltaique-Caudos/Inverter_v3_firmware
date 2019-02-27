@@ -62,13 +62,19 @@ void MX_GPIO_Init(void);
 
 	 void doPsenseOn(); 
 	 void doPsenseOff(); 
+	 void doPsensePulse(); 
+	 void doPsenseToggle(); 
 	 void doSyncOn();
 	 void doSyncOff();
+	 void doSyncPulse();
+	 void doSyncToggle();
 	 void doLedOn();
 	 void doLedOff();
-	 void doLed();
+	 void doLedPulse();
 	 void doLedToggle();
-	 void doSyncSerial(bool bState);
+	 void doSyncSerialOn();
+	 void doSyncSerialOff();
+	 void doSyncSerialPulse();
 	 void doSyncSerialToggle();
 
 /* USER CODE END Prototypes */

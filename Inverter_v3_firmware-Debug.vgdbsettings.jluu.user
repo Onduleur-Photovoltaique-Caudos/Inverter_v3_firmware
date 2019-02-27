@@ -20,6 +20,7 @@
       <string>HRTIM1_TIMA.TIMACR.PREEN</string>
       <string>HRTIM1_TIMB.TIMBCR.PREEN</string>
       <string>ADC2</string>
+      <string>TIM1</string>
     </FavoriteEmbeddedRegisters>
     <LiveVariables>
       <LiveVariable>
@@ -30,7 +31,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>false</Plot>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
       <LiveVariable>
@@ -118,7 +119,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>true</Plot>
+        <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
     </LiveVariables>
