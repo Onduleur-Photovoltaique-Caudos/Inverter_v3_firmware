@@ -184,6 +184,7 @@
     <ClInclude Include="Inc\Loop.h" />
     <ClInclude Include="Inc\main.h" />
     <ClInclude Include="Inc\Measure.h" />
+    <ClInclude Include="Inc\MedianFilter.h" />
     <ClInclude Include="Inc\Serial.h" />
     <ClInclude Include="Inc\stm32f3xx_hal_conf.h" />
     <ClInclude Include="Inc\stm32f3xx_it.h" />
@@ -270,6 +271,7 @@
     <ClCompile Include="Src\Loop.cpp" />
     <ClCompile Include="Src\main.c" />
     <ClCompile Include="Src\Measure.cpp" />
+    <ClCompile Include="Src\MedianFilter.cpp" />
     <ClCompile Include="Src\Serial.cpp" />
     <ClCompile Include="Src\stm32f3xx_hal_msp.c" />
     <ClCompile Include="Src\stm32f3xx_it.c" />

@@ -4,6 +4,7 @@ extern "C"
 }
 
 #include "Measure.h"
+#include "MedianFilter.h"
 #include "gpio.h"
 #include "math.h"
 #include "hrtim.h"
@@ -47,6 +48,25 @@ uint16_t * pM_Vref = &g_ADCBufferM[12];
 uint16_t * pM_I225 = &g_ADCBufferM[13];
 
 #endif
+// store previous values
+unsigned short g_ADCOld[14];
+uint16_t * oM_VIN = &g_ADCOld[0];
+uint16_t * oM_V175 = &g_ADCOld[1];
+uint16_t * oM_V225 = &g_ADCOld[2];
+uint16_t * oM_IOUT = &g_ADCOld[3];
+uint16_t * oM_IHFL = &g_ADCOld[4];
+uint16_t * oM_IH1 = &g_ADCOld[5];
+uint16_t * oM_VOUT1 = &g_ADCOld[6];
+uint16_t * oM_IH2 = &g_ADCOld[7];
+uint16_t * oM_VOUT2 = &g_ADCOld[8];
+uint16_t * oM_IIN = &g_ADCOld[9];
+uint16_t * oM_Temp = &g_ADCOld[10];
+uint16_t * oM_I175 = &g_ADCOld[11];
+uint16_t * oM_Vref = &g_ADCOld[12];
+uint16_t * oM_I225 = &g_ADCOld[13];
+ 
+#define VALIDATE(newValue,oldValue) ((newValue) != 0 ? (oldValue) = ((newValue) > 0 && (newValue) > (oldValue)*9/10 && (newValue) < (oldValue)*11/10? (newValue):(oldValue)):(oldValue))
+
 
 #define ADC_STEPS 4096
 #define ADC_FULL_MEASURE_MV 3300.0
@@ -69,7 +89,7 @@ static unsigned short compare_225 = period / 2;
 static unsigned short compare_175 = period / 2;
 
 //pid factor
-#define P_factorInv 2
+#define P_factorInv 8
 
 bool stopped_225;
 bool stopped_175;
@@ -302,22 +322,39 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		doSyncSerialOn(); // cannot go faster than 100us TODO
 		countEOC = 0;
 		g_MeasurementNumber++;
-		fM_VIN = (*pM_VIN) *mvFactor1;
-		fM_V225 = (*pM_V225) *mvFactor2;
-		fM_IHFL = (*pM_IHFL) *iFactor;
-		fM_VOUT1 = (*pM_VOUT1) *mvFactor1;
-		fM_VOUT2 = (*pM_VOUT2) *mvFactor1;
-		fM_Temp = (*pM_Temp) * 1; 
-		fM_Vref = (*pM_Vref) * 1;
+
+		VALIDATE(*pM_VIN, *oM_VIN);
+		fM_VIN = (*oM_VIN) *mvFactor1;
+
+		VALIDATE(*pM_V225, *oM_V225);
+		fM_V225 = (*oM_V225) *mvFactor2;
+
+		VALIDATE(*pM_IHFL, *oM_IHFL);
+		fM_IHFL = (*oM_IHFL) *iFactor;
+		VALIDATE(*pM_VOUT1, *oM_VOUT1);
+		fM_VOUT1 = (*oM_VOUT1) *mvFactor1;
+		VALIDATE(*pM_VOUT2, *oM_VOUT2);
+		fM_VOUT2 = (*oM_VOUT2) *mvFactor1;
+		VALIDATE(*pM_Temp, *oM_Temp);
+		fM_Temp = (*oM_Temp) * 1; 
+		VALIDATE(*pM_Vref, *pM_Vref);
+		fM_Vref = (*oM_Vref) * 1;
 		// ADC2
-		fM_V175 = (*pM_V175) *mvFactor2;
+		VALIDATE(*pM_V175, *oM_V175);
+		fM_V175 = (*oM_V175) *mvFactor2;
 		doStatsVoltage(fM_V175);
-		fM_IOUT = (*pM_IOUT) *mvFactor1; 
-		fM_IH1 = (*pM_IH1) *iFactor; 
-		fM_IH2 = (*pM_IH2) *iFactor;
-		fM_IIN = (*pM_IIN) *iFactor; 
-		fM_I175 = (*pM_I175) *iFactor; 
-		fM_I225 = (*pM_I225) *iFactor; 
+		VALIDATE(*pM_IOUT, *oM_IOUT);
+		fM_IOUT = (*oM_IOUT) *mvFactor1; 
+		VALIDATE(*pM_IH1, *oM_IH1);
+		fM_IH1 = (*oM_IH1) *iFactor; 
+		VALIDATE(*pM_IH2, *oM_IH2);
+		fM_IH2 = (*oM_IH2) *iFactor;
+		VALIDATE(*pM_IIN, *oM_IIN);
+		fM_IIN = (*oM_IIN) *iFactor; 
+		VALIDATE(*pM_I175, *oM_I175);
+		fM_I175 = (*oM_I175) *iFactor; 
+		VALIDATE(*pM_I225, *oM_I225);
+		fM_I225 = (*oM_I225) *iFactor; 
 		adjust_225_175();
 		doSyncSerialOff();
 	}

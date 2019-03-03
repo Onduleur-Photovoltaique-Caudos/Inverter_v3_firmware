@@ -22,6 +22,7 @@ void doLoop(void){
 		if (count == 99) {
 			mutexStats = 1;
 			count = 0;
+
 			//getMeasureStats(2,message);
 			//sendSerial(message);
 		}

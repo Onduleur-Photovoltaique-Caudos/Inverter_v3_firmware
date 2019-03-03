@@ -94,7 +94,8 @@ void SerialInput::doInputIT(void)
 			nChars++;
 		}
 	}
-	if (HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1) != HAL_OK) {
+	HAL_StatusTypeDef status = HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1);
+	if (status != HAL_OK) {
 		Error_Handler();
 	}
 }

@@ -49,6 +49,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include "Loop.h"
+#include "MedianFilter.h"
 #include "Measure.h"
 #include "Command.h"
 #include "Waveform.h"
@@ -179,6 +180,8 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
+  
+	do_initializeMedian();
   	//HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_1);
 	HAL_Delay(10);
 	HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
@@ -251,10 +254,10 @@ int main(void)
 
 #endif
 
+	initializeCommand();
 
 	HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_RESET); // enable everything
 
-	initializeCommand();
   /* USER CODE END 2 */
 
   /* Infinite loop */
