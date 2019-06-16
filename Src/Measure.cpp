@@ -9,6 +9,7 @@ extern "C"
 #include "math.h"
 #include "hrtim.h"
 #include "Waveform.h"
+#include "Command.h"
 
 int g_MeasurementNumber = 0;
 
@@ -76,7 +77,8 @@ uint16_t * oM_I225 = &g_ADCOld[13];
 
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
-const float iFactor = 1;
+const float iOffset = 2206;
+const float iFactor = 1.5/128;
 
 volatile float fM_VIN, fM_V225, fM_IHFL, fM_VOUT1, fM_VOUT2, fM_Temp, fM_Vref;
 volatile float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225;
@@ -111,12 +113,16 @@ static bool forceStop;
 void doForceStop(bool newValue) {
 	forceStop = newValue;
 }
-void adjust_225_175()
+
+#define START_VOLTAGE 80
+void adjust_225_175(float inputVoltage)
 {
 	float fM_VIN_save = fM_VIN;
-//	if (fabs(fM_VIN) < 10000) {
-//		return; // low voltage at input
-//	}
+	if (inputVoltage < START_VOLTAGE * 1000.0) {
+		doRunLowVoltage();
+	} else {
+		doRunNormalVoltage();
+	}
 
 	float target_175 = fM_VIN * ratioV175;
 	float target_225 = fM_VIN * ratioV225;
@@ -168,7 +174,7 @@ void adjust_225_175()
 	sign_or_0 = (0 < diff) - (diff < 0);
 	diff =  (diff ? sign_or_0 : 0) + diff *  max(compare_175, 96) / 40000;
 
-	compareCfg.CompareValue = min(period - 96, max(95, compare_175 + diff));
+	compareCfg.CompareValue = min(period - 96, max(200/*95*/, compare_175 + diff));
 	compare_175 = compareCfg.CompareValue;
 
 	if (compareCfg.CompareValue < 96 || forceStop) {
@@ -179,10 +185,15 @@ void adjust_225_175()
 			HRTIM_TIMERINDEX_TIMER_C,
 			HRTIM_OUTPUT_TC1,
 			HRTIM_OUTPUTLEVEL_INACTIVE);
-	} else if (compareCfg.CompareValue >= period - 96) { // force active
+	} else if (false && compareCfg.CompareValue >= period - 96) { // force active
+		if(stopped_175)	{
+			HAL_HRTIM_WaveformOutputStart(&hhrtim1,
+				HRTIM_OUTPUT_TC1);
+			stopped_175 = false;
+		}
 		compareCfg.CompareValue = period - 1;
 		HAL_HRTIM_WaveformCompareConfig(&hhrtim1,
-			HRTIM_TIMERINDEX_TIMER_E,
+			HRTIM_TIMERINDEX_TIMER_C,
 			HRTIM_COMPAREUNIT_1,
 			&compareCfg);
 	} else {
@@ -289,8 +300,15 @@ char * getMeasureStats(int what, char * message){
 	return message;
 }
 
+static volatile unsigned long long measureCount;
+
+unsigned long long getMeasureCount()
+{
+	return measureCount;
+}
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 {// end of DMA
+	measureCount++;
 	if (isADC_EOC(adcHandle)){
 		doPsenseToggle();
 		countEOC++;
@@ -314,12 +332,24 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 			bADCPeriodStatsStarted = true;
 		}
 		static int countWithinSegment;
+		static bool bStopped = true;
 		countWithinSegment++;
-		countWithinSegment %= 13;
-		if (0 == countWithinSegment){
-//			doNextWaveformSegment();
+		countWithinSegment %= 4;
+		if (bStopped) {
+			bStopped = !isRun();
+		} else {
+		// debug mode: inhibit sinusoidal output
+#define DO_NORMAL_WAVEFORM 1
+#if DO_NORMAL_WAVEFORM
+			if (0 == countWithinSegment){
+				bool bZeroCrossing = doNextWaveformSegment();
+				if (bZeroCrossing && !isRun()) {
+					bStopped = true;
+				}
+			}
+#endif
 		}
-		doSyncSerialOn(); // cannot go faster than 100us TODO
+		doSyncSerialOn(); // 45-70 us debug, 15 us release
 		countEOC = 0;
 		g_MeasurementNumber++;
 
@@ -330,7 +360,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		fM_V225 = (*oM_V225) *mvFactor2;
 
 		VALIDATE(*pM_IHFL, *oM_IHFL);
-		fM_IHFL = (*oM_IHFL) *iFactor;
+		fM_IHFL = ((*oM_IHFL)-iOffset) *iFactor;
 		VALIDATE(*pM_VOUT1, *oM_VOUT1);
 		fM_VOUT1 = (*oM_VOUT1) *mvFactor1;
 		VALIDATE(*pM_VOUT2, *oM_VOUT2);
@@ -344,18 +374,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		fM_V175 = (*oM_V175) *mvFactor2;
 		doStatsVoltage(fM_V175);
 		VALIDATE(*pM_IOUT, *oM_IOUT);
-		fM_IOUT = (*oM_IOUT) *mvFactor1; 
+		fM_IOUT = ((*oM_IOUT)-iOffset) *iFactor; 
 		VALIDATE(*pM_IH1, *oM_IH1);
-		fM_IH1 = (*oM_IH1) *iFactor; 
+		fM_IH1 = ((*oM_IH1)-iOffset) *iFactor; 
 		VALIDATE(*pM_IH2, *oM_IH2);
-		fM_IH2 = (*oM_IH2) *iFactor;
+		fM_IH2 = ((*oM_IH2)-iOffset) *iFactor;
 		VALIDATE(*pM_IIN, *oM_IIN);
-		fM_IIN = (*oM_IIN) *iFactor; 
+		fM_IIN = ((*oM_IIN)-iOffset) *iFactor; 
 		VALIDATE(*pM_I175, *oM_I175);
-		fM_I175 = (*oM_I175) *iFactor; 
+		fM_I175 = ((*oM_I175)-iOffset) *iFactor; 
 		VALIDATE(*pM_I225, *oM_I225);
-		fM_I225 = (*oM_I225) *iFactor; 
-		adjust_225_175();
+		fM_I225 = ((*oM_I225)-iOffset) *iFactor; 
+		adjust_225_175(fM_VIN);
 		doSyncSerialOff();
 	}
 	

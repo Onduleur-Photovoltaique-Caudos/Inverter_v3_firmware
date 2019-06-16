@@ -109,6 +109,7 @@
 extern volatile int mutexStats;
 void start_us_DWT(int slot);
 unsigned int get_us_DWT(int slot);
+void delay_us_DWT(unsigned long  uSec);
 
 void cpp_ErrorHandler(char *, int);
 

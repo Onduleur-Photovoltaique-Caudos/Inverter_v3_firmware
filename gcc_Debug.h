@@ -5,6 +5,9 @@
 	It is needed for IntelliSense to parse other header files correctly.
 */
 #if defined(_MSC_VER) || defined (__SYSPROGS_CODESENSE__)
+#pragma clang diagnostic push
+
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
 #ifndef __DBL_MIN_EXP__
 #define __DBL_MIN_EXP__ (-1021)
 #endif
@@ -1373,26 +1376,27 @@
 
 // --- Include directories begin --- //
 //.
-//$(LOCALAPPDATA)\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc
-//$(LOCALAPPDATA)\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc/Legacy
-//$(LOCALAPPDATA)\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32/STM32F3xxxx/CMSIS_HAL/Device/ST/STM32F3xx/Include
-//$(LOCALAPPDATA)\VisualGDB\EmbeddedBSPs\arm-eabi\com.sysprogs.arm.stm32/STM32F3xxxx/CMSIS_HAL/Include
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/include/c++/7.2.0
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/include/c++/7.2.0/arm-eabi/thumb/fpu/cortex_m4
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/include/c++/7.2.0/backward
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/include
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/include-fixed
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/sys-include
-//c:\sysgcc\arm-eabi\bin\../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/include
+//$(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc
+//$(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc/Legacy
+//$(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Device/ST/STM32F3xx/Include
+//$(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Include
+//$(TOOLCHAIN_ROOT)\arm-eabi\include\c++\7.2.0
+//$(TOOLCHAIN_ROOT)\arm-eabi\include\c++\7.2.0\arm-eabi\thumb\fpu\cortex_m4
+//$(TOOLCHAIN_ROOT)\arm-eabi\include\c++\7.2.0\backward
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-eabi\7.2.0\include
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-eabi\7.2.0\include-fixed
+//$(TOOLCHAIN_ROOT)\arm-eabi\sys-include
+//$(TOOLCHAIN_ROOT)\arm-eabi\include
 //Inc
 // --- Include directories end --- //
 
 
 // --- Library directories begin --- //
-//c:/sysgcc/arm-eabi/bin/../lib/gcc/arm-eabi/7.2.0/thumb/fpu/cortex_m4/
-//c:/sysgcc/arm-eabi/bin/../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/lib/thumb/fpu/cortex_m4/
-//c:/sysgcc/arm-eabi/bin/../lib/gcc/arm-eabi/7.2.0/
-//c:/sysgcc/arm-eabi/bin/../lib/gcc/
-//c:/sysgcc/arm-eabi/bin/../lib/gcc/arm-eabi/7.2.0/../../../../arm-eabi/lib/
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-eabi\7.2.0\thumb\fpu\cortex_m4\
+//$(TOOLCHAIN_ROOT)\arm-eabi\lib\thumb\fpu\cortex_m4\
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-eabi\7.2.0\
+//$(TOOLCHAIN_ROOT)\lib\gcc\
+//$(TOOLCHAIN_ROOT)\arm-eabi\lib\
 // --- Library directories begin --- //
 
+#pragma clang diagnostic pop

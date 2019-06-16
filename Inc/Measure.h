@@ -22,6 +22,7 @@ extern int g_MeasurementNumber;
 void setV1(float val);
 void setV2(float val);
 void doForceStop(bool newValue);
+unsigned long long getMeasureCount();
 char * getMeasureStats(int what,char* message);
 
 #ifdef __cplusplus

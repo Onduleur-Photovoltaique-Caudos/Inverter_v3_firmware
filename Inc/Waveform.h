@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
 
-void doNextWaveformSegment();
+bool doNextWaveformSegment();
 
 
 #ifdef __cplusplus

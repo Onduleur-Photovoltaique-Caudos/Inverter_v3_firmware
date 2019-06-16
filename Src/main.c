@@ -72,7 +72,7 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void delay_us_DWT(int uSec)
+void delay_us_DWT(unsigned long  uSec)
 {
 	volatile uint32_t cycles = (SystemCoreClock / 1000000L)*uSec;
 	volatile uint32_t start = DWT->CYCCNT;
@@ -234,7 +234,7 @@ int main(void)
 #define DEBUG_LOCK_OUTPUT_SWITCHES 0 // fix the output switches to study high frequency switching
 
 #if 1 
-	//setOutputSlowSwitch(true);
+	setOutputSlowSwitch(true);
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);

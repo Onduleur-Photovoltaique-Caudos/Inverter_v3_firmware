@@ -25,17 +25,77 @@ static SerialInput* pSerialInFromConsole;
 
 #endif
 
+typedef enum _runState {
+	eStop,
+	eStopEmergency,
+	eDelayed,
+	eRun
+} RunState;
+
+RunState runState;
+
 void initializeCommand()
 {
 	setRt(10);
-	setZ1(150);
-	setZ2(150);
+	setZ1(220);
+	setD1(-10);
+	setZ2(220);
+	setD2(-10);
 #ifdef USE_SERIAL
 	pSerialOutToConsole = &SerialOutToConsole;
 	pSerialInFromConsole = &SerialInFromConsole;
 	pSerialInFromConsole->initialize(pSerialOutToConsole);
 	pSerialOutToConsole->puts("\r\nReady\r\n");
 #endif
+	doRunJustBooted();
+}
+
+static uint32_t runDelayTimerStartTick;
+void initializeRunTimer()
+{
+	runDelayTimerStartTick = getMeasureCount();
+}
+#define RUN_DELAY_MS 2000
+bool runDelayTimerFinished()
+{
+	uint32_t currentTick = getMeasureCount();
+
+	return currentTick > (runDelayTimerStartTick + RUN_DELAY_MS*8);
+}
+
+bool isRun()
+{
+	return runState == eRun;
+}
+bool isStop()
+{
+	return runState == eStop;
+}
+
+bool isEmergencyStop()
+{ 
+	return runState == eStop || runState == eStopEmergency;
+}
+
+void doRunJustBooted()
+{
+	runState = eStop;
+}
+void doRunLowVoltage()
+{
+	runState = eStop;
+}
+
+void doRunNormalVoltage()
+{
+	if (runState == eStop) {
+		runState = eDelayed;
+		initializeRunTimer();
+	} else if (runState == eDelayed){
+		if (runDelayTimerFinished()) {
+			runState = eRun;
+		}
+	}
 }
 
 typedef enum {
@@ -92,10 +152,10 @@ public:
 
 int _rt;
 int _base;
-int _countZ1 = 150 * COUNT_PER_NS;
-int _countZ2 = 110 * COUNT_PER_NS;
+int _countZ1 = 120 * COUNT_PER_NS;  // see initializeCommand
+int _countZ2 = 130 * COUNT_PER_NS;   // see initializeCommand
 int _countD1 = -20 * COUNT_PER_NS;
-int _countD2 = -5 * COUNT_PER_NS;
+int _countD2 = 0 * COUNT_PER_NS;
 int _countT1 = 0 * COUNT_PER_NS;
 int _countT2 = 0 * COUNT_PER_NS;
 

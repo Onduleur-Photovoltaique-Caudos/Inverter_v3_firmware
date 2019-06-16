@@ -3,14 +3,13 @@
   <UserDefinedVariableValues />
   <DebugPreferences xsi:type="com.visualgdb.debug.embedded.preferences">
     <CatchpointConfiguration>
-      <Throw>false</Throw>
-      <Rethrow>false</Rethrow>
-      <Catch>false</Catch>
       <Exec>false</Exec>
       <Fork>false</Fork>
       <Vfork>false</Vfork>
       <Syscalls />
+      <CXXCatchpoints />
     </CatchpointConfiguration>
+    <MaskInterruptsWhileStepping>false</MaskInterruptsWhileStepping>
     <MemoryWindowPreferences />
     <FavoriteEmbeddedRegisters>
       <string>HRTIM1_MASTER</string>
@@ -125,6 +124,28 @@
       <LiveVariable>
         <Expression>*pM_VIN</Expression>
         <Type>HexInt16</Type>
+        <Enabled>true</Enabled>
+        <Breakpoint>
+          <ComparisonMode>Equals</ComparisonMode>
+          <Enabled>false</Enabled>
+        </Breakpoint>
+        <Plot>false</Plot>
+        <IsCollapsed>false</IsCollapsed>
+      </LiveVariable>
+      <LiveVariable>
+        <Expression>fM_IIN</Expression>
+        <Type>Float32</Type>
+        <Enabled>true</Enabled>
+        <Breakpoint>
+          <ComparisonMode>Equals</ComparisonMode>
+          <Enabled>false</Enabled>
+        </Breakpoint>
+        <Plot>false</Plot>
+        <IsCollapsed>false</IsCollapsed>
+      </LiveVariable>
+      <LiveVariable>
+        <Expression>fM_IOUT</Expression>
+        <Type>Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>

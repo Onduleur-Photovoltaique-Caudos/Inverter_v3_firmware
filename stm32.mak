@@ -3,11 +3,7 @@
 #DO NOT EDIT MANUALLY. THE FILE WILL BE OVERWRITTEN. 
 #Use VisualGDB Project Properties dialog or modify Makefile or per-configuration .mak files instead.
 
-#VisualGDB provides BSP_ROOT and TOOLCHAIN_ROOT via environment when running Make. The line below will only be active if GNU Make is started manually.
-BSP_ROOT ?= $(LOCALAPPDATA)/VisualGDB/EmbeddedBSPs/arm-eabi/com.sysprogs.arm.stm32
-EFP_BASE ?= $(LOCALAPPDATA)/VisualGDB/EmbeddedEFPs
-TESTFW_BASE ?= $(LOCALAPPDATA)/VisualGDB/TestFrameworks
-TOOLCHAIN_ROOT ?= C:/SysGCC/arm-eabi
+#In order to build this project manually (outside VisualGDB), please provide TOOLCHAIN_ROOT, BSP_ROOT, EFP_BASE and TESTFW_BASE variables via Environment or Make command line
 #Embedded toolchain
 CC := $(TOOLCHAIN_ROOT)/bin/arm-eabi-gcc.exe
 CXX := $(TOOLCHAIN_ROOT)/bin/arm-eabi-g++.exe
@@ -16,18 +12,18 @@ AR := $(TOOLCHAIN_ROOT)/bin/arm-eabi-ar.exe
 OBJCOPY := $(TOOLCHAIN_ROOT)/bin/arm-eabi-objcopy.exe
 
 #Additional flags
-PREPROCESSOR_MACROS += ARM_MATH_CM4 STM32F334R8 flash_layout STM32F334x8
+PREPROCESSOR_MACROS += ARM_MATH_CM4 flash_layout STM32F334R8 STM32F334x8 $$com.sysprogs.bspoptions.stm32.hal_legacy$$
 INCLUDE_DIRS += . $(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc $(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc/Legacy $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Device/ST/STM32F3xx/Include $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Include
 LIBRARY_DIRS += 
-LIBRARY_NAMES += compactcpp
+LIBRARY_NAMES += 
 ADDITIONAL_LINKER_INPUTS += 
 MACOS_FRAMEWORKS += 
 LINUX_PACKAGES += 
 
 CFLAGS += 
 CXXFLAGS += 
-ASFLAGS += -mfpu=fpv4-sp-d16
+ASFLAGS += 
 LDFLAGS += --specs=nano.specs 
-COMMONFLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard
+COMMONFLAGS += -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 LINKER_SCRIPT := $(BSP_ROOT)/STM32F3xxxx/LinkerScripts/STM32F334R8_flash.lds
 

@@ -32,18 +32,24 @@ int iCosine[] = { 92,
 0
 };
 
-static int waveformIndex = WAVEFORM_SEGMENTS / 2;
-static bool bPositive;
+static int waveformIndex = WAVEFORM_SEGMENTS / 2 -1;
+static bool bPositive=true;
 
-void doNextWaveformSegment()
+bool doNextWaveformSegment()
 {
+	bool bZeroCrossing = false;
 	static bool bIncreasing = true;
 	if (bIncreasing) {
 		waveformIndex++;
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
 			bIncreasing = false;
-		} 
+			bPositive = !bPositive;
+			bZeroCrossing = true;
+		}
 	} else {
+		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
+			setOutputSlowSwitch(bPositive);
+		}
 		waveformIndex--;
 		if (waveformIndex <= 0) {
 			bIncreasing = true;
@@ -59,4 +65,5 @@ void doNextWaveformSegment()
 	int nIndex = waveformIndex;
 #endif
 	setRt(iCosine[nIndex]);
+	return bZeroCrossing;
 }

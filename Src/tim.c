@@ -459,32 +459,46 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 void setOutputSlowSwitch(bool bPositive){
-TIM_OC_InitTypeDef sConfigOC;
-	sConfigOC.OCMode = TIM_OCMODE_FORCED_INACTIVE;
-sConfigOC.Pulse = 0;
+	HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_1); 
+	HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_2); 
+
+	TIM_OC_InitTypeDef sConfigOC;
+	sConfigOC.Pulse = 0;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
 	if (bPositive) {
-		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-		sConfigOC.OCNPolarity = TIM_OCPOLARITY_HIGH;
+		sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
 	} else {
-		sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-		sConfigOC.OCNPolarity = TIM_OCPOLARITY_LOW;
+		sConfigOC.OCMode = TIM_OCMODE_FORCED_INACTIVE;
 	}
-sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_SET;
-if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
-	_Error_Handler(__FILE__, __LINE__);
-}
+	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
 
-sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
-if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
-	_Error_Handler(__FILE__, __LINE__);
-}
+	#if 0
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+	if (bPositive) {
+		sConfigOC.OCMode = TIM_OCMODE_FORCED_INACTIVE;
+	} else {
+		sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
+	}
+	#else#endif
+    if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
+		_Error_Handler(__FILE__, __LINE__);
+	}
 
-HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
-//HAL_TIMEx_OC_Start(&htim1, TIM_CHANNEL_1); 
-HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
-//HAL_TIMEx_OC_Start(&htim1, TIM_CHANNEL_2); 
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
+
 }
 /* USER CODE END 1 */
 
