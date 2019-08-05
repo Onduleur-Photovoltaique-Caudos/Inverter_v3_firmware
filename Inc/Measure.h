@@ -19,6 +19,8 @@ extern volatile float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225
 
 extern int g_MeasurementNumber;
 
+float getRatioV225();
+float getRatioV175();
 void setV1(float val);
 void setV2(float val);
 void doForceStop(bool newValue);

@@ -14,7 +14,7 @@ void setZ2(int val);
 void setD1(int val);
 void setD2(int val);
 
-void sendSerial(char* message);
+void sendSerial(const char* message);
 void peekProcessCommand(void);
 
 

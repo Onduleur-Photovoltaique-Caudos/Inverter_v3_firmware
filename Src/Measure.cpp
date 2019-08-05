@@ -99,10 +99,18 @@ bool stopped_175;
 #define max(a,b) (a>b?a:b)
 #define min(a,b) (a>b?b:a)
 
+float getRatioV225()
+{
+	return ratioV225;
+}
 void setV1(float val){
 	ratioV225 = val / 400.0;
 }
 
+float getRatioV175()
+{
+	return ratioV175;
+}
 void setV2(float val)
 {
 	ratioV175 = val / 400.0;
@@ -339,7 +347,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 			bStopped = !isRun();
 		} else {
 		// debug mode: inhibit sinusoidal output
-#define DO_NORMAL_WAVEFORM 1
+#define DO_NORMAL_WAVEFORM 0
 #if DO_NORMAL_WAVEFORM
 			if (0 == countWithinSegment){
 				bool bZeroCrossing = doNextWaveformSegment();

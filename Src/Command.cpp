@@ -65,7 +65,13 @@ bool runDelayTimerFinished()
 
 bool isRun()
 {
+//debug mode for lab tests: FORCE_RUN:1
+#define FORCE_RUN 1
+#if FORCE_RUN
+	return true;
+#else
 	return runState == eRun;
+#endif
 }
 bool isStop()
 {
@@ -162,7 +168,7 @@ int _countT2 = 0 * COUNT_PER_NS;
 #define PERIOD_SWITCH 16000
 #define PER_CENT 100
 
-char * my_itoa(int n, int maxVal = 1000000)
+char * my_itoa(int n, int maxVal = 100000)
 {
 	static char message[11];
 	int leadingZeros = 0;
@@ -197,13 +203,11 @@ char * my_itoa(int n, int maxVal = 1000000)
 	return &message[0];
 }
 #ifdef USE_SERIAL
-void sendSerial(char* message){
+void sendSerial(const char* message){
 	pSerialOutToConsole->puts(message);
 }
 void statusDisplay(void){
-	pSerialOutToConsole->puts("    rt\t    z1\t    d1\t    r1\t    t1\t    z2\t    d2\t    r2\t    t2/");
-	pSerialOutToConsole->puts(my_itoa(COUNT_PER_NS,10));
-	pSerialOutToConsole->puts("->ns\n\r");
+	pSerialOutToConsole->puts("    rt\t    z1\t    d1\t    r1\t    v1\t     z2\t    d2\t    r2\t    v2\n\r");
 	pSerialOutToConsole->puts(my_itoa(_rt));
 	pSerialOutToConsole->puts("\t");
 	pSerialOutToConsole->puts(my_itoa(_countZ1 / COUNT_PER_NS));
@@ -211,16 +215,20 @@ void statusDisplay(void){
 	pSerialOutToConsole->puts(my_itoa(_countD1 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\t");
 	pSerialOutToConsole->puts(my_itoa(_base / COUNT_PER_NS));
+	//pSerialOutToConsole->puts("\t");
+	//pSerialOutToConsole->puts(my_itoa(_countT1 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(_countT1 / COUNT_PER_NS));
-	pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(getRatioV225()*400));
+	pSerialOutToConsole->puts("\t"); 
 	pSerialOutToConsole->puts(my_itoa(_countZ2 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\t");
 	pSerialOutToConsole->puts(my_itoa(_countD2 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\t");
 	pSerialOutToConsole->puts(my_itoa((PERIOD_SWITCH - _base) / COUNT_PER_NS));
+	//pSerialOutToConsole->puts("\t");
+	//pSerialOutToConsole->puts(my_itoa(_countT2 / COUNT_PER_NS));
 	pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(_countT2 / COUNT_PER_NS));
+	pSerialOutToConsole->puts(my_itoa(getRatioV175() * 400));
 	pSerialOutToConsole->puts("\n\r");
 }
 #else
