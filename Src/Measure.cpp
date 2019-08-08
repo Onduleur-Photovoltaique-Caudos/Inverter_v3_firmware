@@ -8,6 +8,7 @@ extern "C"
 #include "gpio.h"
 #include "math.h"
 #include "hrtim.h"
+#include "tim.h"
 #include "Waveform.h"
 #include "Command.h"
 
@@ -309,6 +310,8 @@ char * getMeasureStats(int what, char * message){
 }
 
 static volatile unsigned long long measureCount;
+static volatile bool doneADC;
+static volatile bool bStopped = true;
 
 unsigned long long getMeasureCount()
 {
@@ -319,6 +322,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 	measureCount++;
 	if (isADC_EOC(adcHandle)){
 		doPsenseToggle();
+		//Error_Handler();// we should not be there
 		countEOC++;
 		return;
 	}
@@ -340,7 +344,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 			bADCPeriodStatsStarted = true;
 		}
 		static int countWithinSegment;
-		static bool bStopped = true;
 		countWithinSegment++;
 		countWithinSegment %= 4;
 		if (bStopped) {
@@ -349,6 +352,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		// debug mode: inhibit sinusoidal output
 #define DO_NORMAL_WAVEFORM 0
 #if DO_NORMAL_WAVEFORM
+	     // TIM3 interrupt does it now
 			if (0 == countWithinSegment){
 				bool bZeroCrossing = doNextWaveformSegment();
 				if (bZeroCrossing && !isRun()) {
@@ -395,6 +399,36 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		fM_I225 = ((*oM_I225)-iOffset) *iFactor; 
 		adjust_225_175(fM_VIN);
 		doSyncSerialOff();
-	}
-	
+
+		doneADC = true;
+	} // end of adc1 processing
 }
+
+
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim == &htim2) {
+		if (0 && doneADC) {
+			doneADC = false;
+			// here do non fixed time processing
+			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
+			delay_us_DWT(1);
+			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET);
+			return;
+		}
+		HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET);
+	} else if (htim == &htim3) {
+#if DO_NORMAL_WAVEFORM
+		if (bStopped) {
+			bStopped = !isRun();
+		} else {
+			bool bZeroCrossing = doNextWaveformSegment();
+			if (bZeroCrossing && !isRun()) {
+				bStopped = true;
+			}
+		}
+		#endif
+	}
+}
+

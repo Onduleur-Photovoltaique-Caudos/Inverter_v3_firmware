@@ -12,8 +12,8 @@ AR := $(TOOLCHAIN_ROOT)/bin/arm-eabi-ar.exe
 OBJCOPY := $(TOOLCHAIN_ROOT)/bin/arm-eabi-objcopy.exe
 
 #Additional flags
-PREPROCESSOR_MACROS += ARM_MATH_CM4 flash_layout STM32F334R8 STM32F334x8 $$com.sysprogs.bspoptions.stm32.hal_legacy$$
-INCLUDE_DIRS += . $(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc $(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc/Legacy $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Device/ST/STM32F3xx/Include $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Include
+PREPROCESSOR_MACROS += ARM_MATH_CM4 flash_layout STM32F334R8  $$com.sysprogs.bspoptions.stm32.hal_legacy$$ STM32F334x8 $$com.sysprogs.bspoptions.stm32.ll_driver$$
+INCLUDE_DIRS += . $(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc $(BSP_ROOT)/STM32F3xxxx/STM32F3xx_HAL_Driver/Inc/Legacy $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Device/ST/STM32F3xx/Include $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Include $(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Core/Include
 LIBRARY_DIRS += 
 LIBRARY_NAMES += 
 ADDITIONAL_LINKER_INPUTS += 

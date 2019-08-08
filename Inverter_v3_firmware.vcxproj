@@ -27,7 +27,7 @@
   <PropertyGroup Label="VisualGDBPackageDefinitions">
     <ToolchainID>com.visualgdb.arm-eabi</ToolchainID>
     <BSP_ID>com.sysprogs.arm.stm32</BSP_ID>
-    <BSP_VERSION>2018.12R2</BSP_VERSION>
+    <BSP_VERSION>2019.06</BSP_VERSION>
   </PropertyGroup>
   <ImportGroup Label="VisualGDBFindComponents">
     <Import Project="$(LOCALAPPDATA)\VisualGDB\FindComponents.props" />
@@ -236,20 +236,6 @@
     <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc\stm32f3xx_ll_wwdg.h" />
     <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc\Legacy\stm32f3xx_hal_can_legacy.h" />
     <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f301x8.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f302x8.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f302xc.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f302xe.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f303x8.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f303xc.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f303xe.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f318xx.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f328xx.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f334x8.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f358xx.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f373xc.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f378xx.h" />
-    <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f398xx.h" />
     <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\stm32f3xx.h" />
     <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include\system_stm32f3xx.h" />
     <ClInclude Include="$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Include\arm_common_tables.h" />

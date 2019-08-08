@@ -3,7 +3,6 @@
 #include "tim.h"
 #include <cmath>
 
-extern TIM_HandleTypeDef htim15;
 
 // tim15 period 15, segments 32
 #define WAVEFORM_SEGMENTS 32

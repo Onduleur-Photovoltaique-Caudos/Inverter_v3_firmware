@@ -12,7 +12,7 @@ SerialOutput * SerialOutput::channel_1 = NULL;
 SerialOutput * SerialOutput::channel_2 = NULL;
 
 void cpp_Error_Handler(char * x,int line){
-	_Error_Handler(x, line);
+	Error_Handler();
 }
 
 SerialInput::SerialInput(UART_HandleTypeDef * pHandle, char * buffer, unsigned int size) : pHandle(pHandle), driverBuffer (buffer), driverBufferSize (size)
