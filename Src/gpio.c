@@ -99,7 +99,7 @@ void doPsenseOff()
 {
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_RESET); 
 }
-void doensePulse()
+void doSensePulse()
 {
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_SET); 
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_RESET); 

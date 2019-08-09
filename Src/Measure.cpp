@@ -343,24 +343,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 			resetADCPeriodCounters();
 			bADCPeriodStatsStarted = true;
 		}
-		static int countWithinSegment;
-		countWithinSegment++;
-		countWithinSegment %= 4;
-		if (bStopped) {
-			bStopped = !isRun();
-		} else {
-		// debug mode: inhibit sinusoidal output
-#define DO_NORMAL_WAVEFORM 0
-#if DO_NORMAL_WAVEFORM
-	     // TIM3 interrupt does it now
-			if (0 == countWithinSegment){
-				bool bZeroCrossing = doNextWaveformSegment();
-				if (bZeroCrossing && !isRun()) {
-					bStopped = true;
-				}
-			}
-#endif
-		}
 		doSyncSerialOn(); // 45-70 us debug, 15 us release
 		countEOC = 0;
 		g_MeasurementNumber++;
@@ -408,17 +390,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim2) {
+	//
+	// this happens at the start of ADC acquisition
+	// 9us before XferCplt (release) or 15us (debug)
+	//
 		if (0 && doneADC) {
-			doneADC = false;
-			// here do non fixed time processing
+			// here some processing if needed
 			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
 			delay_us_DWT(1);
 			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET);
 			return;
 		}
-		HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET);
 	} else if (htim == &htim3) {
+		doLedOn();
+#define DO_NORMAL_WAVEFORM 1
 #if DO_NORMAL_WAVEFORM
 		if (bStopped) {
 			bStopped = !isRun();
@@ -428,7 +413,9 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 				bStopped = true;
 			}
 		}
-		#endif
+#endif
+		doLedOff();
+
 	}
 }
 
