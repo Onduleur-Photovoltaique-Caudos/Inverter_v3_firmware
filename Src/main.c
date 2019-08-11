@@ -104,15 +104,6 @@ unsigned int get_us_DWT(int slot)
 
 int g_DMACount = 0;
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	Error_Handler();
-	if (htim == &htim3) {
-		//doLedOn();
-	} else if (htim == &htim15) {
-		//doLedToggle();
-		doNextWaveformSegment();
-	}
-}
 
 void doPin(GPIO_TypeDef* port, uint16_t pin)
 {
@@ -177,8 +168,14 @@ int main(void)
 	HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 	HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
 	HAL_Delay(10);
-	HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_3);
-	HAL_TIM_OC_Start_IT(&htim2, TIM_CHANNEL_1);
+
+	// tim3
+	//__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
+	HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+
+	// tim2 for ADC DMA
+	HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_1);
 
 	HAL_ADC_Start(&hadc2);
 	HAL_ADCEx_MultiModeStart_DMA(&hadc1, (uint32_t*) g_ADCBufferM, ADC_BUFFERM_LENGTH);

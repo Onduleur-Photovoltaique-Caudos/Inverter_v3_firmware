@@ -110,8 +110,6 @@ void Error_Handler(void);
 #define C_HFH_GPIO_Port GPIOA
 #define H2_LON_Pin GPIO_PIN_12
 #define H2_LON_GPIO_Port GPIOA
-#define SYNC_TIM1_ADC_Pin GPIO_PIN_15
-#define SYNC_TIM1_ADC_GPIO_Port GPIOA
 #define SYNC_SERIAL_Pin GPIO_PIN_10
 #define SYNC_SERIAL_GPIO_Port GPIOC
 #define Psense_Pin GPIO_PIN_2

@@ -14,25 +14,6 @@ extern "C"
 
 int g_MeasurementNumber = 0;
 
-#if 0
-uint16_t g_ADCBuffer1[ADC_BUFFER1_LENGTH];
-uint16_t * pM_VIN = &g_ADCBuffer1[0];
-uint16_t * pM_V225 = &g_ADCBuffer1[1];
-uint16_t * pM_IHFL = &g_ADCBuffer1[2];
-uint16_t * pM_VOUT1 = &g_ADCBuffer1[3];
-uint16_t * pM_VOUT2 = &g_ADCBuffer1[4];
-uint16_t * pM_Temp = &g_ADCBuffer1[5];
-
-uint16_t g_ADCBuffer2[ADC_BUFFER2_LENGTH];
-uint16_t * pM_V175 = &g_ADCBuffer2[0];
-uint16_t * pM_IOUT = &g_ADCBuffer2[1];
-uint16_t * pM_IH1 = &g_ADCBuffer2[2];
-uint16_t * pM_IH2 = &g_ADCBuffer2[3];
-uint16_t * pM_IIN = &g_ADCBuffer2[4];
-uint16_t * pM_I175 = &g_ADCBuffer2[5];
-uint16_t * pM_I225 = &g_ADCBuffer2[5];
-
-#else
 uint16_t g_ADCBufferM[ADC_BUFFERM_LENGTH*2];
 uint16_t * pM_VIN = &g_ADCBufferM[0];
 uint16_t * pM_V175 = &g_ADCBufferM[1];
@@ -49,7 +30,7 @@ uint16_t * pM_I175 = &g_ADCBufferM[11];
 uint16_t * pM_Vref = &g_ADCBufferM[12];
 uint16_t * pM_I225 = &g_ADCBufferM[13];
 
-#endif
+
 // store previous values
 unsigned short g_ADCOld[14];
 uint16_t * oM_VIN = &g_ADCOld[0];
@@ -67,7 +48,8 @@ uint16_t * oM_I175 = &g_ADCOld[11];
 uint16_t * oM_Vref = &g_ADCOld[12];
 uint16_t * oM_I225 = &g_ADCOld[13];
  
-#define VALIDATE(newValue,oldValue) ((newValue) != 0 ? (oldValue) = ((newValue) > 0 && (newValue) > (oldValue)*9/10 && (newValue) < (oldValue)*11/10? (newValue):(oldValue)):(oldValue))
+//#define VALIDATE(newValue,oldValue) ((newValue) != 0 ? (oldValue) = ((newValue) > 0 && (newValue) > (oldValue)*9/10 && (newValue) < (oldValue)*11/10? (newValue):(oldValue)):(oldValue))
+#define VALIDATE(newValue,oldValue) ((oldValue) = (newValue))
 
 
 #define ADC_STEPS 4096
@@ -78,14 +60,15 @@ uint16_t * oM_I225 = &g_ADCOld[13];
 
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
-const float iOffset = 2206;
+const float iOffset = 2337 - 80; // experimentaly calibrated
+const float iOffsetExtra = 75;
 const float iFactor = 1.5/128;
 
 volatile float fM_VIN, fM_V225, fM_IHFL, fM_VOUT1, fM_VOUT2, fM_Temp, fM_Vref;
 volatile float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225;
 
-float ratioV225 = 150.0/400;
-float ratioV175 = 250.0/400;
+float ratioV225 = 140.0/400;
+float ratioV175 = 200.0/400;
 
 #define period  16000
 static unsigned short compare_225 = period / 2;
@@ -149,6 +132,7 @@ void adjust_225_175(float inputVoltage)
 	diff =  (diff ? sign_or_0 : 0) + diff * max(compare_225, 96) / 40000;
 
 	compareCfg.CompareValue = min(period - 96, max(95, compare_225 - diff));
+	//compareCfg.CompareValue = 8500;  // debug: force 50% TODO remove
 	compare_225 = compareCfg.CompareValue; // remember previous value;
 
 	if (compareCfg.CompareValue < 96 || forceStop) { // force inactive
@@ -386,6 +370,37 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 	} // end of adc1 processing
 }
 
+void doWaveformStep()
+{
+	doLedOn();
+#define DO_NORMAL_WAVEFORM 1
+#if DO_NORMAL_WAVEFORM
+	if (bStopped) {
+		bStopped = !isRun();
+	} else {
+		bool bZeroCrossing = doNextWaveformSegment();
+		if (bZeroCrossing && !isRun()) {
+			bStopped = true;
+		}
+	}
+#endif
+	doLedOff();
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim == &htim3) {
+#if 0
+		doLedOn();
+		doLedOff();
+#else
+		Error_Handler();
+#endif
+		//doWaveformStep();
+	} else {
+		Error_Handler();
+	}
+}
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -402,20 +417,15 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 			return;
 		}
 	} else if (htim == &htim3) {
+#if 1
 		doLedOn();
-#define DO_NORMAL_WAVEFORM 1
-#if DO_NORMAL_WAVEFORM
-		if (bStopped) {
-			bStopped = !isRun();
-		} else {
-			bool bZeroCrossing = doNextWaveformSegment();
-			if (bZeroCrossing && !isRun()) {
-				bStopped = true;
-			}
-		}
+#if 0
+		doWaveformStep();
 #endif
 		doLedOff();
-
+#else
+		Error_Handler();
+#endif
 	}
 }
 

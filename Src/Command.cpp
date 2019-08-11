@@ -37,10 +37,10 @@ RunState runState;
 void initializeCommand()
 {
 	setRt(10);
-	setZ1(220);
-	setD1(-10);
-	setZ2(220);
-	setD2(-10);
+	setZ1(170);
+	setD1(-20);
+	setZ2(200);
+	setD2(-20);
 #ifdef USE_SERIAL
 	pSerialOutToConsole = &SerialOutToConsole;
 	pSerialInFromConsole = &SerialInFromConsole;
