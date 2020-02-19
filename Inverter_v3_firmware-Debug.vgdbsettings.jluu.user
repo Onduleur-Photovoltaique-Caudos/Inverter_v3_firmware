@@ -30,7 +30,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>false</Plot>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
       <LiveVariable>
@@ -63,7 +63,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>true</Plot>
+        <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
       <LiveVariable>
@@ -74,7 +74,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>true</Plot>
+        <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
       </LiveVariable>
       <LiveVariable>

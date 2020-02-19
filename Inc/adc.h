@@ -36,6 +36,11 @@ extern ADC_HandleTypeDef hadc2;
 
 /* USER CODE BEGIN Private defines */
 
+	 //Temperature sensor raw value at 30 degrees C, VDDA=3.3V
+#define TEMP30_CAL_ADDR ((uint16_t*) ((uint32_t) 0x1FFFF7B8))
+	 //Temperature sensor raw value at 110 degrees C, VDDA=3.3V
+#define TEMP110_CAL_ADDR ((uint16_t*) ((uint32_t) 0x1FFFF7C2))
+
 /* USER CODE END Private defines */
 
 void MX_ADC1_Init(void);

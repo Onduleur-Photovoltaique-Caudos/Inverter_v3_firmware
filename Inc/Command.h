@@ -13,6 +13,8 @@ void setZ1(int val);
 void setZ2(int val);
 void setD1(int val);
 void setD2(int val);
+void setT1(int val);
+void setT2(int val);
 
 void sendSerial(const char* message);
 void peekProcessCommand(void);

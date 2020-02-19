@@ -37,10 +37,16 @@ RunState runState;
 void initializeCommand()
 {
 	setRt(10);
-	setZ1(170);
-	setD1(-20);
-	setZ2(200);
+
+	setT1(20);
+	setZ1(140);
+	setD1(-40);
+	setV1(140);
+
+	setT2(20);
+	setZ2(190);
 	setD2(-20);
+	setV2(220);
 #ifdef USE_SERIAL
 	pSerialOutToConsole = &SerialOutToConsole;
 	pSerialInFromConsole = &SerialInFromConsole;
@@ -315,7 +321,7 @@ void setRt(int valRt)
 		valueA3 = PERIOD_SWITCH + 1; // make sure lower switch is a permanent 1
 	}
 	if (valRt >= _rt && valRt == 92 && _rt != 92) {
-		doLedToggle();
+//		doLedToggle();
 	}
 	if (_base < _countZ2 + _countD2) { // going to zero
 		valueB2 = _base;

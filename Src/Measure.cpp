@@ -4,9 +4,11 @@ extern "C"
 }
 
 #include "Measure.h"
+#include "stm32f3xx_ll_adc.h"
 #include "MedianFilter.h"
 #include "gpio.h"
-#include "math.h"
+#include <cmath>
+#include <stdio.h>
 #include "hrtim.h"
 #include "tim.h"
 #include "Waveform.h"
@@ -53,22 +55,28 @@ uint16_t * oM_I225 = &g_ADCOld[13];
 
 
 #define ADC_STEPS 4096
-#define ADC_FULL_MEASURE_MV 3300.0
+#define ADC_FULL_MEASURE_MV (VREFINT_CAL_VREF * 1.0f)
 #define RESISTOR_400V 4422
-#define RESISTOR_200V 2222
+#define RESISTOR_200V 4200
 #define RESISTOR_3V 22
 
+unsigned short * pRefInt = (((uint16_t*)((uint32_t)0x1FFFF7BAU)));
+unsigned short sRefInt;
+float mvCorrectionFactor = 1.0;
+const float mvFactor0 = ADC_FULL_MEASURE_MV / ADC_STEPS;
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
-const float iOffset = 2337 - 80; // experimentaly calibrated
-const float iOffsetExtra = 75;
-const float iFactor = 1.5/128;
+const float iOffset = 2568; // standard offset for ACS712 depends on supply voltage
+
+const float iDivider = 9.0f / 6.8f;  // values of resistor bridge for current
+const float iFactor1 = 1.0f / 100.0f;    // for 20A model 100mV/A
+const float iFactor2 = 1.0f / 185.0f;    // for 5A model 185mv/A    
 
 volatile float fM_VIN, fM_V225, fM_IHFL, fM_VOUT1, fM_VOUT2, fM_Temp, fM_Vref;
 volatile float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225;
 
-float ratioV225 = 140.0/400;
-float ratioV175 = 200.0/400;
+float ratioV225 = 160.0/400;
+float ratioV175 = 210.0/400;
 
 #define period  16000
 static unsigned short compare_225 = period / 2;
@@ -332,37 +340,39 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		g_MeasurementNumber++;
 
 		VALIDATE(*pM_VIN, *oM_VIN);
-		fM_VIN = (*oM_VIN) *mvFactor1;
-
+		fM_VIN = (*oM_VIN) *mvFactor1 * mvCorrectionFactor; 		// test at P21 -- ok pas de bruit
 		VALIDATE(*pM_V225, *oM_V225);
-		fM_V225 = (*oM_V225) *mvFactor2;
-
+		fM_V225 = (*oM_V225) *mvFactor2 * mvCorrectionFactor; 	// test at P3  -- ok pas de bruit
 		VALIDATE(*pM_IHFL, *oM_IHFL);
-		fM_IHFL = ((*oM_IHFL)-iOffset) *iFactor;
+		fM_IHFL = ((*oM_IHFL) - iOffset)  *iDivider * mvCorrectionFactor; // test at U11 pin 1 -- error lit sur VOUT1
 		VALIDATE(*pM_VOUT1, *oM_VOUT1);
-		fM_VOUT1 = (*oM_VOUT1) *mvFactor1;
+		fM_VOUT1 = (*oM_VOUT1) *mvFactor1;			// ADC1 IN11 test at P20 -- OK
 		VALIDATE(*pM_VOUT2, *oM_VOUT2);
-		fM_VOUT2 = (*oM_VOUT2) *mvFactor1;
+		fM_VOUT2 = (*oM_VOUT2) *mvFactor1;			// test at P18 -- OK
 		VALIDATE(*pM_Temp, *oM_Temp);
-		fM_Temp = (*oM_Temp) * 1; 
-		VALIDATE(*pM_Vref, *pM_Vref);
-		fM_Vref = (*oM_Vref) * 1;
+		fM_Temp = ((*TEMP30_CAL_ADDR) - (*oM_Temp)) * 80.0f / ((*TEMP30_CAL_ADDR) - (*TEMP110_CAL_ADDR)) + 30; 
+		; 
+		VALIDATE(*pM_Vref, *oM_Vref);
+		fM_Vref = (*oM_Vref) * mvFactor0;
+		mvCorrectionFactor =  0.01f*(* VREFINT_CAL_ADDR) / (*oM_Vref) + 0.99f * mvCorrectionFactor;
 		// ADC2
 		VALIDATE(*pM_V175, *oM_V175);
-		fM_V175 = (*oM_V175) *mvFactor2;
+		fM_V175 = (*oM_V175) *mvFactor2 * mvCorrectionFactor; 			// test at P4  -- ok 
 		doStatsVoltage(fM_V175);
 		VALIDATE(*pM_IOUT, *oM_IOUT);
-		fM_IOUT = ((*oM_IOUT)-iOffset) *iFactor; 
+		fM_IOUT = ((*oM_IOUT)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;      	// test at P13 pin2 (range 5V) -- bruite error, pas connecte essayer R43 R44
 		VALIDATE(*pM_IH1, *oM_IH1);
-		fM_IH1 = ((*oM_IH1)-iOffset) *iFactor; 
+		fM_IH1 = ((*oM_IH1) - iOffset) *iDivider* mvCorrectionFactor;    		// test at U20 pin1 -- error lit sur IOUT
 		VALIDATE(*pM_IH2, *oM_IH2);
-		fM_IH2 = ((*oM_IH2)-iOffset) *iFactor;
+		fM_IH2 = ((*oM_IH2) - iOffset) *iDivider* mvCorrectionFactor;    		// test at U17 pin1 -- OK
 		VALIDATE(*pM_IIN, *oM_IIN);
-		fM_IIN = ((*oM_IIN)-iOffset) *iFactor; 
+		fM_IIN = ((*oM_IIN)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;    	// test at P16 pin2 range 5V --OK
 		VALIDATE(*pM_I175, *oM_I175);
-		fM_I175 = ((*oM_I175)-iOffset) *iFactor; 
+		fM_I175 = ((*oM_I175)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;     	// test at P10 pin2 range 5V --OK
 		VALIDATE(*pM_I225, *oM_I225);
-		fM_I225 = ((*oM_I225)-iOffset) *iFactor; 
+		fM_I225 = ((*oM_I225)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;     	// test at P9 pin2 range 5V -- OK
+
+
 		adjust_225_175(fM_VIN);
 		doSyncSerialOff();
 
@@ -372,7 +382,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 
 void doWaveformStep()
 {
-	doLedOn();
+//	doLedOn();
 #define DO_NORMAL_WAVEFORM 1
 #if DO_NORMAL_WAVEFORM
 	if (bStopped) {
@@ -384,7 +394,7 @@ void doWaveformStep()
 		}
 	}
 #endif
-	doLedOff();
+//	doLedOff();
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -396,7 +406,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 #else
 		Error_Handler();
 #endif
-		//doWaveformStep();
+		//not used doWaveformStep();
 	} else {
 		Error_Handler();
 	}
@@ -418,11 +428,11 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 	} else if (htim == &htim3) {
 #if 1
-		doLedOn();
+//		doLedOn();
 #if 0
 		doWaveformStep();
 #endif
-		doLedOff();
+//		doLedOff();
 #else
 		Error_Handler();
 #endif

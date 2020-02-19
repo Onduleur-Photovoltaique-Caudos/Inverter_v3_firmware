@@ -51,7 +51,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Sync_Pin|Led_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SYNC_SERIAL_GPIO_Port, SYNC_SERIAL_Pin, GPIO_PIN_RESET);
@@ -66,12 +66,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin */
-  GPIO_InitStruct.Pin = Sync_Pin|Led_Pin;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = Sync_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(Sync_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = SYNC_SERIAL_Pin;
@@ -90,6 +90,20 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+static bool bLedIsGpio;
+void setLedPinGpio()
+{  /*Configure GPIO pin : Led */
+	if (!bLedIsGpio){
+		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+
+		GPIO_InitStruct.Pin = Led_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		HAL_GPIO_Init(Led_GPIO_Port, &GPIO_InitStruct); 
+		bLedIsGpio = true;
+	}
+}
 
 void doPsenseOn()
 {
@@ -127,19 +141,23 @@ void doSyncToggle()
 }
 void doLedOn()
 {
+	setLedPinGpio();
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_SET); 
 }
 void doLedOff()
 {
+	setLedPinGpio();
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_RESET); 
 }
 void doLedPulse()
 {
+	setLedPinGpio();
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_SET); 
 	HAL_GPIO_WritePin(Led_GPIO_Port, Led_Pin, GPIO_PIN_RESET); 
 }
 void doLedToggle()
 {
+	setLedPinGpio();
 	HAL_GPIO_TogglePin(Led_GPIO_Port, Led_Pin); 
 }
 void doSyncSerialOn()
