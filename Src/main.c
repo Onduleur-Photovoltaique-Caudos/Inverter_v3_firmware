@@ -24,6 +24,7 @@
 #include "crc.h"
 #include "dma.h"
 #include "hrtim.h"
+#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -36,6 +37,7 @@
 #include "Measure.h"
 #include "Command.h"
 #include "Waveform.h"
+#include "Temperature.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -161,6 +163,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM15_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   
 	do_initializeMedian();
@@ -169,7 +172,9 @@ int main(void)
 	HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
 	HAL_Delay(10);
 
-	// tim3
+	initializeTemperatureSensors();
+
+	// tim3 sine wave synthesis
 	//__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
 	HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
@@ -180,7 +185,7 @@ int main(void)
 	HAL_ADC_Start(&hadc2);
 	HAL_ADCEx_MultiModeStart_DMA(&hadc1, (uint32_t*) g_ADCBufferM, ADC_BUFFERM_LENGTH);
 
-
+	// hrtim for all fast transistor functions
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_MASTER, HRTIM_COMPAREUNIT_1);
 	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA1 | HRTIM_OUTPUT_TA2);
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_COMPAREUNIT_1);
@@ -217,22 +222,19 @@ int main(void)
 
 #if 1 
 	setOutputSlowSwitch(true);
+	
+	//HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
 	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 
 #else
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2); 
-
-
-	// start sine wave synthesis
-	// commenting below line makes a square at 10% voltage
-	// see function doNextWaveformSegment
-	//HAL_TIM_Base_Start_IT(&htim15);
 
 #endif
 
@@ -289,7 +291,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_HRTIM1|RCC_PERIPHCLK_TIM1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_HRTIM1|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_TIM1;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   PeriphClkInit.Hrtim1ClockSelection = RCC_HRTIM1CLK_PLLCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)

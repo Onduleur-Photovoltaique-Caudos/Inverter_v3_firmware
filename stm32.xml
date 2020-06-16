@@ -5,7 +5,7 @@
     <Revision>0</Revision>
   </ToolchainVersion>
   <BspID>com.sysprogs.arm.stm32</BspID>
-  <BspVersion>2020.01</BspVersion>
+  <BspVersion>2020.06</BspVersion>
   <McuID>STM32F334R8</McuID>
   <MCUDefinitionFile>STM32F3xxxx/DeviceDefinitions/stm32f334x8.xml</MCUDefinitionFile>
   <MCUProperties>

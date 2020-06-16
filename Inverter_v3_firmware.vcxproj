@@ -27,7 +27,7 @@
   <PropertyGroup Label="VisualGDBPackageDefinitions">
     <ToolchainID>com.visualgdb.arm-eabi</ToolchainID>
     <BSP_ID>com.sysprogs.arm.stm32</BSP_ID>
-    <BSP_VERSION>2020.01</BSP_VERSION>
+    <BSP_VERSION>2020.06</BSP_VERSION>
   </PropertyGroup>
   <ImportGroup Label="VisualGDBFindComponents">
     <Import Project="$(LOCALAPPDATA)\VisualGDB\FindComponents.props" />
@@ -57,7 +57,7 @@
     <NMakePreprocessorDefinitions>__VisualGDB_CFG_Debug;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <NMakeIncludeSearchPath>.;$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc;$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc\Legacy;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Core\Include;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Include;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\RTOS2\Include;$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.2.1;$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.2.1\arm-none-eabi\thumb\v7e-m+fp\hard;$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.2.1\backward;$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.2.1\include;$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.2.1\include-fixed;$(TOOLCHAIN_ROOT)\arm-none-eabi\include;Inc;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>.;$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc;$(BSP_ROOT)\STM32F3xxxx\STM32F3xx_HAL_Driver\Inc\Legacy;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Core\Include;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Device\ST\STM32F3xx\Include;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\Include;$(BSP_ROOT)\STM32F3xxxx\CMSIS_HAL\RTOS2\Include;$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.3.1;$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.3.1\arm-none-eabi\thumb\v7e-m+fp\hard;$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.3.1\backward;$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.3.1\include;$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.3.1\include-fixed;$(TOOLCHAIN_ROOT)\arm-none-eabi\include;Inc;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <NMakeForcedIncludes>$(ProjectDir)\gcc_Release.h;$(VISUALGDB_DIR)\gcc_compat.h;$(BSP_ROOT)\stm32_compat.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /build "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /clean "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeCleanCommandLine>
@@ -77,6 +77,8 @@
     <ClInclude Include="Inc\dma.h" />
     <ClInclude Include="Inc\gpio.h" />
     <ClInclude Include="Inc\hrtim.h" />
+    <ClInclude Include="Inc\i2c.h" />
+    <ClInclude Include="Inc\LM75.h" />
     <ClInclude Include="Inc\Loop.h" />
     <ClInclude Include="Inc\main.h" />
     <ClInclude Include="Inc\Measure.h" />
@@ -84,6 +86,7 @@
     <ClInclude Include="Inc\Serial.h" />
     <ClInclude Include="Inc\stm32f3xx_hal_conf.h" />
     <ClInclude Include="Inc\stm32f3xx_it.h" />
+    <ClInclude Include="Inc\Temperature.h" />
     <ClInclude Include="Inc\tim.h" />
     <ClInclude Include="Inc\usart.h" />
     <ClInclude Include="Inc\Waveform.h" />
@@ -273,6 +276,8 @@
     <ClCompile Include="Src\dma.c" />
     <ClCompile Include="Src\gpio.c" />
     <ClCompile Include="Src\hrtim.c" />
+    <ClCompile Include="Src\i2c.c" />
+    <ClCompile Include="Src\LM75.cpp" />
     <ClCompile Include="Src\Loop.cpp" />
     <ClCompile Include="Src\main.c" />
     <ClCompile Include="Src\Measure.cpp" />
@@ -280,6 +285,7 @@
     <ClCompile Include="Src\Serial.cpp" />
     <ClCompile Include="Src\stm32f3xx_hal_msp.c" />
     <ClCompile Include="Src\stm32f3xx_it.c" />
+    <ClCompile Include="Src\Temperature.cpp" />
     <ClCompile Include="Src\tim.c" />
     <ClCompile Include="Src\usart.c" />
     <ClCompile Include="Src\Waveform.cpp" />

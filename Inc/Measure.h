@@ -23,7 +23,7 @@ float getRatioV225();
 float getRatioV175();
 void setV1(float val);
 void setV2(float val);
-void doForceStop(bool newValue);
+void doStopZVS(bool newValue);
 unsigned long long getMeasureCount();
 char * getMeasureStats(int what,char* message);
 

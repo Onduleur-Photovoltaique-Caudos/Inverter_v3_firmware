@@ -1,5 +1,12 @@
 #pragma once
 
+typedef enum {
+	eNormal,
+	eOver,
+	eEmergency
+} t_breakerState;
+
+void setBreaker(t_breakerState newState,float f_IIN, float f_IOUT);
 
 bool isRun();
 void doRunStop();
@@ -7,6 +14,9 @@ void doRunEnable();
 void doRunJustBooted();
 void doRunLowVoltage();
 void doRunNormalVoltage();
+bool doAC(bool newACState);
+bool setACState(int newACState);
+bool isAC();
 
 void setRt(int val);
 void setZ1(int val);

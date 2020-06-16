@@ -689,7 +689,7 @@
 #define __LDBL_DECIMAL_DIG__ 17
 #endif
 #ifndef __VERSION__
-#define __VERSION__ "9.2.1 20191025 (release) [ARM/arm-9-branch revision 277599]"
+#define __VERSION__ "9.3.1 20200408 (release)"
 #endif
 #ifndef __ULLFRACT_FBIT__
 #define __ULLFRACT_FBIT__ 64
@@ -1262,7 +1262,7 @@
 #define __ATOMIC_CONSUME 1
 #endif
 #ifndef __GNUC_MINOR__
-#define __GNUC_MINOR__ 2
+#define __GNUC_MINOR__ 3
 #endif
 #ifndef __INT_FAST16_WIDTH__
 #define __INT_FAST16_WIDTH__ 32
@@ -1403,21 +1403,21 @@
 //$(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Device/ST/STM32F3xx/Include
 //$(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/Include
 //$(BSP_ROOT)/STM32F3xxxx/CMSIS_HAL/RTOS2/Include
-//$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.2.1
-//$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.2.1\arm-none-eabi\thumb\v7e-m+fp\hard
-//$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.2.1\backward
-//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.2.1\include
-//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.2.1\include-fixed
+//$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.3.1
+//$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.3.1\arm-none-eabi\thumb\v7e-m+fp\hard
+//$(TOOLCHAIN_ROOT)\arm-none-eabi\include\c++\9.3.1\backward
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.3.1\include
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.3.1\include-fixed
 //$(TOOLCHAIN_ROOT)\arm-none-eabi\include
 //Inc
 // --- Include directories end --- //
 
 
 // --- Library directories begin --- //
-//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.2.1\thumb\v7e-m+fp\hard\
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.3.1\thumb\v7e-m+fp\hard\
 //$(TOOLCHAIN_ROOT)\arm-none-eabi\lib\thumb\v7e-m+fp\hard\
 //$(TOOLCHAIN_ROOT)\arm-none-eabi\lib\thumb\v7e-m+fp\hard\
-//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.2.1\
+//$(TOOLCHAIN_ROOT)\lib\gcc\arm-none-eabi\9.3.1\
 //$(TOOLCHAIN_ROOT)\lib\gcc\
 //$(TOOLCHAIN_ROOT)\arm-none-eabi\lib\
 //$(TOOLCHAIN_ROOT)\arm-none-eabi\lib\

@@ -4,6 +4,7 @@ extern "C"
 }
 
 #include "Measure.h"
+#include "Command.h"
 #include "stm32f3xx_ll_adc.h"
 #include "MedianFilter.h"
 #include "gpio.h"
@@ -13,6 +14,7 @@ extern "C"
 #include "tim.h"
 #include "Waveform.h"
 #include "Command.h"
+
 
 int g_MeasurementNumber = 0;
 
@@ -66,7 +68,9 @@ float mvCorrectionFactor = 1.0;
 const float mvFactor0 = ADC_FULL_MEASURE_MV / ADC_STEPS;
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
-const float iOffset = 2568; // standard offset for ACS712 depends on supply voltage
+const float iOffset = 1850; // standard offset for ACS712 depends on supply voltage
+
+//2568 unit 1
 
 const float iDivider = 9.0f / 6.8f;  // values of resistor bridge for current
 const float iFactor1 = 1.0f / 100.0f;    // for 20A model 100mV/A
@@ -108,13 +112,30 @@ void setV2(float val)
 	ratioV175 = val / 400.0;
 }
 
-static bool forceStop;
+static bool stoppedZVS;
 
-void doForceStop(bool newValue) {
-	forceStop = newValue;
+void doStopZVS(bool newValue)
+{
+	stoppedZVS = newValue;
 }
 
 #define START_VOLTAGE 80
+#define MAX_INPUT_CURRENT 10
+#define MAX_OUTPUT_CURRENT 20
+void checkOvercurrent(float f_IIN,float f_IOUT){
+	if (f_IIN < MAX_INPUT_CURRENT && f_IOUT < MAX_OUTPUT_CURRENT){
+		return;
+	}
+	if (f_IIN / 1.5f > MAX_INPUT_CURRENT || f_IOUT / 1.5f < MAX_OUTPUT_CURRENT) {
+		//emergency stop
+		setACState(false);
+		setRt(0);
+		setBreaker(eEmergency,f_IIN,f_IOUT);
+	} else { // we stop a next zero crossing
+		setACState(false);
+		setBreaker(eOver, f_IIN, f_IOUT);
+	}
+}
 void adjust_225_175(float inputVoltage)
 {
 	float fM_VIN_save = fM_VIN;
@@ -143,7 +164,9 @@ void adjust_225_175(float inputVoltage)
 	//compareCfg.CompareValue = 8500;  // debug: force 50% TODO remove
 	compare_225 = compareCfg.CompareValue; // remember previous value;
 
-	if (compareCfg.CompareValue < 96 || forceStop) { // force inactive
+	if(compareCfg.CompareValue < 96 || stoppedZVS)
+	{
+		 // force inactive
 		stopped_225 = true;
 		HAL_HRTIM_WaveformOutputStop(&hhrtim1,
 			HRTIM_OUTPUT_TE1);
@@ -178,7 +201,7 @@ void adjust_225_175(float inputVoltage)
 	compareCfg.CompareValue = min(period - 96, max(200/*95*/, compare_175 + diff));
 	compare_175 = compareCfg.CompareValue;
 
-	if (compareCfg.CompareValue < 96 || forceStop) {
+	if (compareCfg.CompareValue < 96 || stoppedZVS) {
 		stopped_175 = true;
 		HAL_HRTIM_WaveformOutputStop(&hhrtim1,
 			HRTIM_OUTPUT_TC1);
@@ -303,8 +326,6 @@ char * getMeasureStats(int what, char * message){
 
 static volatile unsigned long long measureCount;
 static volatile bool doneADC;
-static volatile bool bStopped = true;
-
 unsigned long long getMeasureCount()
 {
 	return measureCount;
@@ -350,7 +371,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		VALIDATE(*pM_VOUT2, *oM_VOUT2);
 		fM_VOUT2 = (*oM_VOUT2) *mvFactor1;			// test at P18 -- OK
 		VALIDATE(*pM_Temp, *oM_Temp);
-		fM_Temp = ((*TEMP30_CAL_ADDR) - (*oM_Temp)) * 80.0f / ((*TEMP30_CAL_ADDR) - (*TEMP110_CAL_ADDR)) + 30; 
+		fM_Temp = ((*TEMP30_CAL_ADDR) - (*oM_Temp)* mvCorrectionFactor) * 80.0f / ((*TEMP30_CAL_ADDR) - (*TEMP110_CAL_ADDR)) + 30; 
 		; 
 		VALIDATE(*pM_Vref, *oM_Vref);
 		fM_Vref = (*oM_Vref) * mvFactor0;
@@ -372,7 +393,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		VALIDATE(*pM_I225, *oM_I225);
 		fM_I225 = ((*oM_I225)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;     	// test at P9 pin2 range 5V -- OK
 
-
+		checkOvercurrent(fM_IIN, fM_IOUT);
 		adjust_225_175(fM_VIN);
 		doSyncSerialOff();
 
@@ -380,21 +401,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 	} // end of adc1 processing
 }
 
-void doWaveformStep()
-{
-//	doLedOn();
-#define DO_NORMAL_WAVEFORM 1
-#if DO_NORMAL_WAVEFORM
-	if (bStopped) {
-		bStopped = !isRun();
-	} else {
-		bool bZeroCrossing = doNextWaveformSegment();
-		if (bZeroCrossing && !isRun()) {
-			bStopped = true;
-		}
-	}
-#endif
-//	doLedOff();
+float getInputVoltage(){
+	return fM_VIN;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -414,12 +422,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim == &htim2) {
-	//
-	// this happens at the start of ADC acquisition
-	// 9us before XferCplt (release) or 15us (debug)
-	//
-		if (0 && doneADC) {
+	if (htim == &htim1) {
+		//
+		// this happens at the start of ADC acquisition
+		// 9us before XferCplt (release) or 15us (debug)
+		//
+		if(0 && doneADC) {
 			// here some processing if needed
 			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
 			delay_us_DWT(1);
@@ -427,15 +435,12 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 			return;
 		}
 	} else if (htim == &htim3) {
-#if 1
-//		doLedOn();
-#if 0
-		doWaveformStep();
-#endif
-//		doLedOff();
-#else
-		Error_Handler();
-#endif
+
+				//htim3 triggers the waveform step
+				doWaveformStep();
+
+	} else {
+		Error_Handler(); // another timer ?
 	}
 }
 

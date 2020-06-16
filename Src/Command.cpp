@@ -2,11 +2,12 @@ extern "C"
 {
 #include "main.h"
 }
-
+#include "stm32f3xx_hal.h"
 #include "Command.h"
 #include "gpio.h"
 #include <cstring>
 #include "Measure.h"
+#include "Temperature.h"
 #include "hrtim.h"
 #include "stdlib.h"
 
@@ -34,17 +35,53 @@ typedef enum _runState {
 
 RunState runState;
 
+bool stateAC; // produce AC waveform
+t_breakerState breakerState = eNormal;
+unsigned long long runDelayTimerStartTick;
+
+
+char * my_itoa(int n, int maxVal = 100000);
+
+
+
+void setBreaker(t_breakerState newState, float f_IIN, float f_IOUT)
+{
+	breakerState = newState;
+	switch(newState) {
+	case eNormal:
+		break;
+	case eOver:
+		pSerialOutToConsole->puts("\r\nOvercurrent:");
+		goto values;
+		break;
+	case eEmergency:
+		pSerialOutToConsole->puts("\r\nEmergency:"); 
+	}
+values:
+	pSerialOutToConsole->puts(my_itoa(f_IIN));
+	pSerialOutToConsole->puts(":");
+	pSerialOutToConsole->puts(my_itoa(f_IOUT));
+	pSerialOutToConsole->puts("\r\n");
+}
+
+void setBreakerRearm(int value){
+	if (value != 0) {
+		breakerState = eNormal;
+		doRunJustBooted();
+	}
+}
+
 void initializeCommand()
 {
 	setRt(10);
 
 	setT1(20);
-	setZ1(140);
-	setD1(-40);
+	setZ1(130);
+	setD1(-20);
 	setV1(140);
 
 	setT2(20);
-	setZ2(190);
+	setZ2(130);
 	setD2(-20);
 	setV2(220);
 #ifdef USE_SERIAL
@@ -56,7 +93,6 @@ void initializeCommand()
 	doRunJustBooted();
 }
 
-static uint32_t runDelayTimerStartTick;
 void initializeRunTimer()
 {
 	runDelayTimerStartTick = getMeasureCount();
@@ -64,11 +100,33 @@ void initializeRunTimer()
 #define RUN_DELAY_MS 2000
 bool runDelayTimerFinished()
 {
-	uint32_t currentTick = getMeasureCount();
-
-	return currentTick > (runDelayTimerStartTick + RUN_DELAY_MS*8);
+	unsigned long long currentTick = getMeasureCount();
+	if (breakerState!= eNormal){
+		return false;
+	}
+	return currentTick > (runDelayTimerStartTick + RUN_DELAY_MS * 8);
 }
 
+bool setACState(int newACState)
+{
+	bool oldState = stateAC;
+	stateAC = newACState != 0;
+	return oldState;
+}
+static bool lastACstate; // we remember last AC, so we can 
+bool isAC()
+{
+	if (stateAC) {
+		lastACstate = true;
+		return true;
+	} else {
+		if (lastACstate) {
+			setRt(0);
+			lastACstate = false;
+		}
+		return false;
+	}
+}
 bool isRun()
 {
 //debug mode for lab tests: FORCE_RUN:1
@@ -110,10 +168,13 @@ void doRunNormalVoltage()
 	}
 }
 
-typedef enum {
+ typedef enum _command_t {
 	none,
 	st,
 	rt,
+	tt,
+	ac,
+	ar,
 	z1,
 	z2,
 	d1, 
@@ -123,10 +184,16 @@ typedef enum {
 	v1,
 	v2
  } command_t;
-command_t commandArray[] =  { none,
+
+const command_t firstCompositeCommand = z1;
+const command_t commandArray[] =  { 
+	none,
 	st,
 	rt,
-	z1,
+	tt,
+	ac,
+	ar, // end of simple commands
+	z1, // start of composite commands
 	z2,
 	d1, 
 	d2, 
@@ -137,6 +204,10 @@ command_t commandArray[] =  { none,
 };
 command_t command;
 /* Commands 2 alphanumerical, = sign, integer 
+st=  // display status
+tt=  // display temperatures
+ac = {0,1} // generate sinewave
+ar = {0,1} // 1=rearm breaker
 rt=n    ratio
 z1=n	zvs pulse width ns for low side (going up)
 z2=n	zvs pulse width in ns for hi side (going down)
@@ -174,40 +245,6 @@ int _countT2 = 0 * COUNT_PER_NS;
 #define PERIOD_SWITCH 16000
 #define PER_CENT 100
 
-char * my_itoa(int n, int maxVal = 100000)
-{
-	static char message[11];
-	int leadingZeros = 0;
-	bool negative = false;
-	char d;
-	int i = 0;
-	char nextC = 0;
-	message[0] = 0;
-	if (n<0) {
-		negative = true;
-		n = -n;
-	}
-	while (maxVal > 9 && (d= n/maxVal) == 0) {
-		leadingZeros++;
-		maxVal /= 10;
-	}
-	while (i< leadingZeros - 1){
-		message[i++] = ' ';
-	}
-	if (negative != 0) {
-		message[i++] = '-';
-	} else {
-		message[i++] = ' ';
-	}
-	while (maxVal != 0){
-		d = '0' + n / maxVal;
-		message[i++] = d;
-		n = n % maxVal;
-		maxVal = maxVal / 10;
-	}
-	message[i + 1] = 0;
-	return &message[0];
-}
 #ifdef USE_SERIAL
 void sendSerial(const char* message){
 	pSerialOutToConsole->puts(message);
@@ -236,6 +273,22 @@ void statusDisplay(void){
 	pSerialOutToConsole->puts("\t");
 	pSerialOutToConsole->puts(my_itoa(getRatioV175() * 400));
 	pSerialOutToConsole->puts("\n\r");
+}
+
+void temperatureDisplay(int reinit)
+{
+	for (int i=0; i < TEMPERATURE_SENSOR_COUNT ;i++){
+		if (reinit != 0) {
+			pSerialOutToConsole->puts(my_itoa(getTemp(i)));
+		} else {
+			pSerialOutToConsole->puts(my_itoa(acquireTemp(i)));
+		}
+		if (i < TEMPERATURE_SENSOR_COUNT - 1) {
+			pSerialOutToConsole->puts("\t");
+		} else {
+			pSerialOutToConsole->puts("\n\r");
+		}
+	}
 }
 #else
 void statusDisplay(){}
@@ -330,7 +383,7 @@ void setRt(int valRt)
 		setCompareA2(0x20); // use minimum value so we have a set
 		setCompareA3(PERIOD_SWITCH + 0x20);
 		// supporess the ZVS pulses
-		doForceStop(true);
+		doStopZVS(true);
 		doOutputSetSourceA1None(); // lower switch
 		setOutputA1(0); 
 		doOutputSetSourceB1None(); //upper switch
@@ -341,7 +394,7 @@ void setRt(int valRt)
 		setCompareB2(0x20); // set
 		setCompareB3(PERIOD_SWITCH+0x20);
 		// supporess the ZVS pulses
-		doForceStop(true);
+		doStopZVS(true);
 		doOutputSetSourceA1None(); // lower switch
 		setOutputA1(0); 
 		doOutputSetSourceB1None(); //upper switch
@@ -350,7 +403,7 @@ void setRt(int valRt)
 		if (_rt==0 || _rt==100){ // restore the ZVS pulses (use a boolean bNoZVS)
 			doOutputSetSourceA1MasterPer();
 			doOutputSetSourceB1MasterCMP1();
-			doForceStop(false);
+			doStopZVS(false);
 		}
 		doZ1(); // sets A1 and A2
 		doZ2(); // sets B1 and B2
@@ -362,6 +415,7 @@ void setRt(int valRt)
 	doUpdateMAB();
 }
 #ifdef USE_SERIAL
+// command parser
 commandAndValue getCommand() {
 	commandAndValue result(none, 0);
 	char strConsole[SERIAL_BUFFER_SIZE];
@@ -369,12 +423,12 @@ commandAndValue getCommand() {
 	command = none;
 	bool hasValue = false;
 	int value = 0;
-	char commandList[] = "srzdtv";
+	const char commandList[] = "srazdtv";
 	char *commandListPtr;
-	char simpleCommandList[] = "sr";
-	char numbers12[] = "12";
-	char numbers[] = "0123456789";
-	char compositeCommandList[] = "zdtv";
+	const char * simpleCommandListStr[] = {"no","st","rt","tt", "ac", "ar"};
+	const char numbers12[] = "12";
+	const char numbers[] = "0123456789";
+	const char compositeCommandList[] = "zdtv";
 	bool negativeValue = false;
 
 	if (pSerialInFromConsole->fgetsNonBlocking(strConsole, 48)) {
@@ -394,7 +448,7 @@ commandAndValue getCommand() {
 			if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
 				break;
 			} else 	if (state == '\0') {
-				if ((commandListPtr = strchr(commandList, c))) {
+				if ((commandListPtr = strchr(commandList, c))) { // look for first char of command
 					state = c;
 				}
 			} else if (equalFound) {
@@ -408,12 +462,21 @@ commandAndValue getCommand() {
 				if (c == '=') {
 					equalFound = true;
 				}
-			} else if (strchr(commandList, state)) {
-				char * where;
-				if ((where = strchr(simpleCommandList, state))) {
-					command = commandArray[1 + where - simpleCommandList];
-				} else if ((where = strchr(numbers12, c))) {
-					command = commandArray[z1 + (strchr(compositeCommandList, state) - compositeCommandList) * 2 + where - numbers12];
+			} else if (strchr(commandList, state)) { //if we have a non 0 state ie. second command char, identify command
+				char commandInput[3];
+				commandInput[0] = state;
+				commandInput[1] = c;
+				commandInput[2] = 0;
+				for (int j = 0; j < firstCompositeCommand;j++) {
+					if (0 == strcmp(commandInput, simpleCommandListStr[j])) {
+						command = commandArray[j];
+						continue;
+					}
+				}
+				char * where = strchr(numbers12, c);
+				int indexIncrement = where - numbers12;
+				if ((where = strchr(numbers12, c))) {
+					command = commandArray[firstCompositeCommand + (strchr(compositeCommandList, state) - compositeCommandList) * 2 + indexIncrement];
 				}
 			}
 		}
@@ -459,6 +522,13 @@ void processCommand(commandAndValue cv)
 	case t2:
 		setT2(cv.value);
 		break;
+	case tt:
+		temperatureDisplay(cv.value);
+		break;
+	case ac:
+		setACState(cv.value);
+	case ar:
+		setBreakerRearm(cv.value);
 	case none:
 	default:
 		;
@@ -474,3 +544,39 @@ void peekProcessCommand()
 	processCommand(cv);
 }
 #endif
+
+
+char * my_itoa(int n, int maxVal)
+{
+	static char message[11];
+	int leadingZeros = 0;
+	bool negative = false;
+	char d;
+	int i = 0;
+	char nextC = 0;
+	message[0] = 0;
+	if (n < 0) {
+		negative = true;
+		n = -n;
+	}
+	while (maxVal > 9 && (d = n / maxVal) == 0) {
+		leadingZeros++;
+		maxVal /= 10;
+	}
+	while (i < leadingZeros - 1) {
+		message[i++] = ' ';
+	}
+	if (negative != 0) {
+		message[i++] = '-';
+	} else {
+		message[i++] = ' ';
+	}
+	while (maxVal != 0) {
+		d = '0' + n / maxVal;
+		message[i++] = d;
+		n = n % maxVal;
+		maxVal = maxVal / 10;
+	}
+	message[i + 1] = 0;
+	return &message[0];
+}
