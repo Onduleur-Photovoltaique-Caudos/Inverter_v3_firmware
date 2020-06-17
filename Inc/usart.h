@@ -27,7 +27,7 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-#ifdef USE_SERIAL
+
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart2;
@@ -39,7 +39,7 @@ extern UART_HandleTypeDef huart2;
 void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-#endif
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

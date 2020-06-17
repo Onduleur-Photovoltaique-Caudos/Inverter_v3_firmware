@@ -21,8 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-#include "main.h"
-#ifdef USE_SERIAL
+
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -108,7 +107,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 } 
 
 /* USER CODE BEGIN 1 */
-#endif
+
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

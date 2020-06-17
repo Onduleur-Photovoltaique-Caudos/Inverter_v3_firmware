@@ -11,20 +11,16 @@ extern "C"
 #include "hrtim.h"
 #include "stdlib.h"
 
-#ifdef USE_SERIAL
+
 #include "Serial.h"
 
 #define SERIAL_BUFFER_SIZE 50
 static char bufferOutConsole[SERIAL_BUFFER_SIZE];
 static char bufferInConsole[SERIAL_BUFFER_SIZE];
-
 static SerialOutput SerialOutToConsole(&huart2, bufferOutConsole, SERIAL_BUFFER_SIZE);	 // via USB
 static SerialInput SerialInFromConsole(&huart2, bufferInConsole, SERIAL_BUFFER_SIZE);
-
 static SerialOutput* pSerialOutToConsole;
 static SerialInput* pSerialInFromConsole;
-
-#endif
 
 typedef enum _runState {
 	eStop,
@@ -33,16 +29,38 @@ typedef enum _runState {
 	eRun
 } RunState;
 
-RunState runState;
+volatile RunState runState;
 
-bool stateAC; // produce AC waveform
-t_breakerState breakerState = eNormal;
-unsigned long long runDelayTimerStartTick;
+volatile bool stateAC;  // produce AC waveform
+volatile t_breakerState breakerState = eNormal;
+volatile unsigned long long runDelayTimerStartTick;
+
+
 
 
 char * my_itoa(int n, int maxVal = 100000);
 
+void initializeCommand()
+{
+	setRt(10);
 
+	setT1(20);
+	setZ1(130);
+	setD1(-20);
+	setV1(140);
+
+	setT2(20);
+	setZ2(130);
+	setD2(-20);
+	setV2(220);
+
+	pSerialOutToConsole = &SerialOutToConsole;
+	pSerialInFromConsole = &SerialInFromConsole;
+	pSerialInFromConsole->initialize(pSerialOutToConsole);
+	pSerialOutToConsole->puts("\r\nReady\r\n");
+
+	doRunJustBooted();
+}
 
 void setBreaker(t_breakerState newState, float f_IIN, float f_IOUT)
 {
@@ -71,27 +89,6 @@ void setBreakerRearm(int value){
 	}
 }
 
-void initializeCommand()
-{
-	setRt(10);
-
-	setT1(20);
-	setZ1(130);
-	setD1(-20);
-	setV1(140);
-
-	setT2(20);
-	setZ2(130);
-	setD2(-20);
-	setV2(220);
-#ifdef USE_SERIAL
-	pSerialOutToConsole = &SerialOutToConsole;
-	pSerialInFromConsole = &SerialInFromConsole;
-	pSerialInFromConsole->initialize(pSerialOutToConsole);
-	pSerialOutToConsole->puts("\r\nReady\r\n");
-#endif
-	doRunJustBooted();
-}
 
 void initializeRunTimer()
 {
@@ -175,6 +172,7 @@ void doRunNormalVoltage()
 	tt,
 	ac,
 	ar,
+	sm,
 	z1,
 	z2,
 	d1, 
@@ -192,7 +190,8 @@ const command_t commandArray[] =  {
 	rt,
 	tt,
 	ac,
-	ar, // end of simple commands
+	ar, 
+	sm, // end of simple commands
 	z1, // start of composite commands
 	z2,
 	d1, 
@@ -208,6 +207,7 @@ st=  // display status
 tt=  // display temperatures
 ac = {0,1} // generate sinewave
 ar = {0,1} // 1=rearm breaker
+sm= report measurements
 rt=n    ratio
 z1=n	zvs pulse width ns for low side (going up)
 z2=n	zvs pulse width in ns for hi side (going down)
@@ -245,7 +245,6 @@ int _countT2 = 0 * COUNT_PER_NS;
 #define PERIOD_SWITCH 16000
 #define PER_CENT 100
 
-#ifdef USE_SERIAL
 void sendSerial(const char* message){
 	pSerialOutToConsole->puts(message);
 }
@@ -275,7 +274,7 @@ void statusDisplay(void){
 	pSerialOutToConsole->puts("\n\r");
 }
 
-void temperatureDisplay(int reinit)
+void temperaturesDisplay(int reinit)
 {
 	for (int i=0; i < TEMPERATURE_SENSOR_COUNT ;i++){
 		if (reinit != 0) {
@@ -290,9 +289,26 @@ void temperatureDisplay(int reinit)
 		}
 	}
 }
-#else
-void statusDisplay(){}
-#endif
+
+void measurementsDisplay()
+{
+	pSerialOutToConsole->puts(my_itoa(fM_VIN / 1000)); 			pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_V225 / 1000)); 		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IHFL  * 1000));		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_VOUT1 / 1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_VOUT2 / 1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_Temp));				pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(mvCorrectionFactor * 1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_V175 / 1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IOUT * 1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IH1 * 1000)) ;			pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IH2 * 1000)) ;			pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IIN * 1000)) ;			pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_I175 * 1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_I225 * 1000)) ;
+	pSerialOutToConsole->puts("\n\r");
+}
+
 void doZ1(void){
 	setCompareA1(_countZ1);
 	setCompareA2(_countZ1 + _countD1);
@@ -414,7 +430,7 @@ void setRt(int valRt)
 	_rt = valRt;
 	doUpdateMAB();
 }
-#ifdef USE_SERIAL
+
 // command parser
 commandAndValue getCommand() {
 	commandAndValue result(none, 0);
@@ -425,7 +441,7 @@ commandAndValue getCommand() {
 	int value = 0;
 	const char commandList[] = "srazdtv";
 	char *commandListPtr;
-	const char * simpleCommandListStr[] = {"no","st","rt","tt", "ac", "ar"};
+	const char * simpleCommandListStr[] = {"no","st","rt","tt", "ac", "ar", "sm"};
 	const char numbers12[] = "12";
 	const char numbers[] = "0123456789";
 	const char compositeCommandList[] = "zdtv";
@@ -487,7 +503,6 @@ commandAndValue getCommand() {
 	}
 	return result;
 }
-#endif
 
 void processCommand(commandAndValue cv)
 {
@@ -523,18 +538,20 @@ void processCommand(commandAndValue cv)
 		setT2(cv.value);
 		break;
 	case tt:
-		temperatureDisplay(cv.value);
+		temperaturesDisplay(cv.value);
 		break;
 	case ac:
 		setACState(cv.value);
 	case ar:
 		setBreakerRearm(cv.value);
+	case sm:
+		measurementsDisplay();
 	case none:
 	default:
 		;
 	}
 }
-#ifdef USE_SERIAL
+
 void peekProcessCommand()
 {
 	commandAndValue cv = getCommand();
@@ -543,7 +560,6 @@ void peekProcessCommand()
 	}
 	processCommand(cv);
 }
-#endif
 
 
 char * my_itoa(int n, int maxVal)

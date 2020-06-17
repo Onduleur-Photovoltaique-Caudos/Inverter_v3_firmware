@@ -2,7 +2,6 @@ extern "C" {
 #include "main.h"
 }
 
-#ifdef USE_SERIAL
 #include "Serial.h"
 #include <string.h>
 
@@ -183,5 +182,3 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 	static int nLastError = huart->ErrorCode;
 	//Error_Handler();
 }
-
-#endif

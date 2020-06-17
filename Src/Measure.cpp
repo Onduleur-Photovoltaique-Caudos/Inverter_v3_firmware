@@ -64,7 +64,6 @@ uint16_t * oM_I225 = &g_ADCOld[13];
 
 unsigned short * pRefInt = (((uint16_t*)((uint32_t)0x1FFFF7BAU)));
 unsigned short sRefInt;
-float mvCorrectionFactor = 1.0;
 const float mvFactor0 = ADC_FULL_MEASURE_MV / ADC_STEPS;
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
@@ -77,6 +76,7 @@ const float iFactor1 = 1.0f / 100.0f;    // for 20A model 100mV/A
 const float iFactor2 = 1.0f / 185.0f;    // for 5A model 185mv/A    
 
 volatile float fM_VIN, fM_V225, fM_IHFL, fM_VOUT1, fM_VOUT2, fM_Temp, fM_Vref;
+volatile float mvCorrectionFactor = 1.0;
 volatile float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225;
 
 float ratioV225 = 160.0/400;

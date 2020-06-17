@@ -13,7 +13,7 @@ extern uint16_t g_ADCBuffer2[];
 #define ADC_BUFFERM_LENGTH 7
 extern uint16_t g_ADCBufferM[];
 
-extern volatile float fM_VIN, fM_V225, fM_IHFL, fM_VOUT1, fM_VOUT2, fM_Temp, fm_Vref;
+extern volatile float fM_VIN, fM_V225, fM_IHFL, fM_VOUT1, fM_VOUT2, fM_Temp, fm_Vref, mvCorrectionFactor;
 extern volatile float fM_V175, fM_IOUT, fM_IH1, fM_IH2, fM_IIN, fM_I175, fM_I225;
 
 
