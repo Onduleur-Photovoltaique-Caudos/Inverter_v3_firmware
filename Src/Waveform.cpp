@@ -43,7 +43,7 @@ bool doNextWaveformSegment()
 {
 	bool bZeroCrossing = false;
 	static bool bIncreasing = true;
-	if (waveformIndex == (WAVEFORM_SEGMENTS / 4) + 1) {
+	if (waveformIndex == (WAVEFORM_SEGMENTS / 6)) {
 		 // measure harmonic 3 of input voltage here
 		 if (bIncreasing){
 			 fVH3I = fM_VIN;
@@ -79,7 +79,7 @@ bool doNextWaveformSegment()
 	int nIndex = waveformIndex;
 
 	if (isAC()){  // AC sine waveform generation
-		setRt(iCosine[nIndex]);
+		setRt(iCosine[nIndex]*getPower()/100);
 	}
 	return bZeroCrossing;
 }
@@ -102,4 +102,9 @@ void doWaveformStep()
 		}
 	}
 	//	doLedOff();
+}
+
+float get3HD() // third harmonic distortion
+{
+	float hd = fabs((fVH3I + fVH3D - fVH3M) / fVH3M);
 }

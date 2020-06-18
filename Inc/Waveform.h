@@ -8,6 +8,7 @@ extern "C" {
 
 
 	void doWaveformStep();
+	float get3HD();
 
 
 #ifdef __cplusplus

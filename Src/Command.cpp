@@ -10,7 +10,7 @@ extern "C"
 #include "Temperature.h"
 #include "hrtim.h"
 #include "stdlib.h"
-
+#include <algorithm> 
 
 #include "Serial.h"
 
@@ -35,7 +35,10 @@ volatile bool stateAC;  // produce AC waveform
 volatile t_breakerState breakerState = eNormal;
 volatile unsigned long long runDelayTimerStartTick;
 
-
+volatile short maxPower;
+volatile short nowPower=100;
+float fnowPower = 100;
+volatile bool bLimitPower;
 
 
 char * my_itoa(int n, int maxVal = 100000);
@@ -62,6 +65,23 @@ void initializeCommand()
 	doRunJustBooted();
 }
 
+void setMaxPower(int newMax){
+	if (newMax == 0) {
+		bLimitPower = false;
+		return;
+	} 
+	bLimitPower = true;
+	maxPower = newMax;
+}
+int getPower(){
+	return nowPower;
+}
+
+#define ADJUSTMENT_TIME_CONSTANT 10
+void adjustPower(float adjustment){
+	fnowPower = std::max(100.0f, fnowPower*(1 + adjustment/ADJUSTMENT_TIME_CONSTANT));
+	nowPower = fnowPower;
+}
 void setBreaker(t_breakerState newState, float f_IIN, float f_IOUT)
 {
 	breakerState = newState;
@@ -86,6 +106,8 @@ void setBreakerRearm(int value){
 	if (value != 0) {
 		breakerState = eNormal;
 		doRunJustBooted();
+	} else {
+		setBreaker(eOver, 100, 100);
 	}
 }
 
@@ -173,6 +195,7 @@ void doRunNormalVoltage()
 	ac,
 	ar,
 	sm,
+	po,
 	z1,
 	z2,
 	d1, 
@@ -191,7 +214,8 @@ const command_t commandArray[] =  {
 	tt,
 	ac,
 	ar, 
-	sm, // end of simple commands
+	sm,
+	po, // end of simple commands
 	z1, // start of composite commands
 	z2,
 	d1, 
@@ -201,13 +225,24 @@ const command_t commandArray[] =  {
 	v1,
 	v2
 };
+const char * simpleCommandListStr[] = {
+	"no", 
+	"st", 
+	"rt", 
+	"tt", 
+	"ac", 
+	"ar", 
+	"sm", 
+	"po" 
+	};
 command_t command;
 /* Commands 2 alphanumerical, = sign, integer 
 st=  // display status
 tt=  // display temperatures
 ac = {0,1} // generate sinewave
-ar = {0,1} // 1=rearm breaker
+ar = {0,1} // 0=breaker test  1=rearm breaker
 sm= report measurements
+po=n    max power
 rt=n    ratio
 z1=n	zvs pulse width ns for low side (going up)
 z2=n	zvs pulse width in ns for hi side (going down)
@@ -441,7 +476,6 @@ commandAndValue getCommand() {
 	int value = 0;
 	const char commandList[] = "srazdtv";
 	char *commandListPtr;
-	const char * simpleCommandListStr[] = {"no","st","rt","tt", "ac", "ar", "sm"};
 	const char numbers12[] = "12";
 	const char numbers[] = "0123456789";
 	const char compositeCommandList[] = "zdtv";
@@ -546,6 +580,8 @@ void processCommand(commandAndValue cv)
 		setBreakerRearm(cv.value);
 	case sm:
 		measurementsDisplay();
+	case po:
+		setMaxPower(cv.value);
 	case none:
 	default:
 		;
