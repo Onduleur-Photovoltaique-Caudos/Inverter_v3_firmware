@@ -9,6 +9,7 @@ extern "C"
 #include "Measure.h"
 #include "Temperature.h"
 #include "hrtim.h"
+#include "tim.h"
 #include "stdlib.h"
 #include <algorithm> 
 
@@ -196,6 +197,7 @@ void doRunNormalVoltage()
 	ar,
 	sm,
 	po,
+	fa,
 	z1,
 	z2,
 	d1, 
@@ -215,7 +217,8 @@ const command_t commandArray[] =  {
 	ac,
 	ar, 
 	sm,
-	po, // end of simple commands
+	po,
+	fa, // end of simple commands
 	z1, // start of composite commands
 	z2,
 	d1, 
@@ -233,7 +236,8 @@ const char * simpleCommandListStr[] = {
 	"ac", 
 	"ar", 
 	"sm", 
-	"po" 
+	"po",
+	"fa"
 	};
 command_t command;
 /* Commands 2 alphanumerical, = sign, integer 
@@ -474,7 +478,7 @@ commandAndValue getCommand() {
 	command = none;
 	bool hasValue = false;
 	int value = 0;
-	const char commandList[] = "srazdtv";
+	const char commandList[] = "srazdtf";
 	char *commandListPtr;
 	const char numbers12[] = "12";
 	const char numbers[] = "0123456789";
@@ -582,6 +586,8 @@ void processCommand(commandAndValue cv)
 		measurementsDisplay();
 	case po:
 		setMaxPower(cv.value);
+	case fa:
+		setFanPWM(cv.value);
 	case none:
 	default:
 		;

@@ -493,6 +493,18 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 
+void setFanPWM( unsigned short rT)
+{
+	if (rT > 100){
+		rT = 100;
+	}
+	if (rT<10){
+		rT = 10;
+	}
+	int pulseValue = htim1.Instance->ARR * rT / 100;
+	htim1.Instance->CCR3 = pulseValue;
+
+}
 void setLedPinTim2()
 {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };

@@ -47,6 +47,7 @@ void MX_TIM15_Init(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                                             
 /* USER CODE BEGIN Prototypes */
+void setFanPWM(unsigned short rT);
 void	 setOutputSlowSwitch(bool bPositive);
 /* USER CODE END Prototypes */
 

@@ -107,4 +107,5 @@ void doWaveformStep()
 float get3HD() // third harmonic distortion
 {
 	float hd = fabs((fVH3I + fVH3D - fVH3M) / fVH3M);
+	return hd;
 }
