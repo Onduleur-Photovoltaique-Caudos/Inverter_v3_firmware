@@ -4,7 +4,7 @@
 #include "tim.h"
 #include <cmath>
 #include "Temperature.h"
-
+#include <algorithm> 
 
 // tim15 period 15, segments 32
 #define WAVEFORM_SEGMENTS 32
@@ -38,6 +38,11 @@ static bool bPositive=true;
 
 static volatile bool bStopped = true;
 float fVH3I, fVH3D, fVH3M;
+
+volatile short maxPower;
+volatile short nowPower = 100;
+float fnowPower = 100;
+volatile bool bLimitPower;
 
 bool doNextWaveformSegment()
 {
@@ -104,8 +109,79 @@ void doWaveformStep()
 	//	doLedOff();
 }
 
-float get3HD() // third harmonic distortion
+void setMaxPower(int newMax)
+{
+	if (newMax == 0) {
+		bLimitPower = false;
+		return;
+	} 
+	bLimitPower = true;
+	maxPower = newMax;
+}
+int getMaxPower()
+{
+	return maxPower;
+}
+bool getPowerLimitFlag(){
+	return bLimitPower;
+}
+int getPower()
+{
+	return nowPower;
+}
+
+float harmonicDistortion;
+#define ADJUSTMENT_TIME_CONSTANT 10
+#define TARGET_HD 0.05
+
+float get3HD(){
+	return harmonicDistortion;
+}
+static float compute3HD() // third harmonic distortion
 {
 	float hd = fabs((fVH3I + fVH3D - fVH3M) / fVH3M);
 	return hd;
+}
+
+
+static void adjustPower(float adjustment)
+{
+	fnowPower = std::max(100.0f, fnowPower*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT));
+	nowPower = fnowPower;
+	if (bLimitPower && nowPower > maxPower) {
+		nowPower = maxPower;
+	}
+}
+
+void doAdjustPower(){	
+	harmonicDistortion=compute3HD();
+	adjustPower(TARGET_HD - harmonicDistortion);
+}
+
+static bool bFanSpeedIsDefined;
+static int fanSpeed = 20;
+
+int getFanSpeed(){
+	return fanSpeed;
+}
+void setFanSpeed(int newSpeed)
+{
+	if (newSpeed == 0) {
+		bFanSpeedIsDefined = false;
+	} else {
+		bFanSpeedIsDefined = true;
+		fanSpeed = newSpeed;
+		setFanPWM(newSpeed);
+	}
+}
+
+void doAdjustFanSpeed()
+{
+	if (bFanSpeedIsDefined){
+		return;
+	}
+	float powerIn;
+	powerIn = getIIN()*getVIN() / 1000;
+	fanSpeed = powerIn / 3000;
+	setFanPWM(fanSpeed);
 }

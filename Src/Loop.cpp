@@ -9,8 +9,6 @@ extern "C"
 #include "Waveform.h"
 #include "stm32f3xx_hal.h"
 
-#define TARGET_HD 0.05
-
 void doLoop(void){
 	int count = 0;
 	char message[100];
@@ -21,7 +19,7 @@ void doLoop(void){
 
 		HAL_Delay(10);
 		count++;
-		harmonicDistortion=get3HD();
-		adjustPower(TARGET_HD - harmonicDistortion);
+		doAdjustPower();
+		doAdjustFanSpeed();
 	}
 }

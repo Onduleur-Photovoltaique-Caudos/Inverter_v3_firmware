@@ -130,10 +130,10 @@ void checkOvercurrent(float f_IIN,float f_IOUT){
 		//emergency stop
 		setACState(false);
 		setRt(0);
-		setBreaker(eEmergency,f_IIN,f_IOUT);
+		setBreaker(eEmergency, f_IIN, MAX_INPUT_CURRENT, f_IOUT, MAX_OUTPUT_CURRENT);
 	} else { // we stop a next zero crossing
 		setACState(false);
-		setBreaker(eOver, f_IIN, f_IOUT);
+		setBreaker(eOver, f_IIN, MAX_INPUT_CURRENT, f_IOUT, MAX_OUTPUT_CURRENT);
 	}
 }
 void adjust_225_175(float inputVoltage)
@@ -444,3 +444,10 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 }
 
+float getIIN(){
+	return fM_IIN;
+}
+
+float getVIN(){
+	return fM_VIN;
+}

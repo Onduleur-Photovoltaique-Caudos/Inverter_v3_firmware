@@ -4,6 +4,7 @@ extern "C"
 }
 #include "stm32f3xx_hal.h"
 #include "Command.h"
+#include "Waveform.h"
 #include "gpio.h"
 #include <cstring>
 #include "Measure.h"
@@ -11,7 +12,7 @@ extern "C"
 #include "hrtim.h"
 #include "tim.h"
 #include "stdlib.h"
-#include <algorithm> 
+
 
 #include "Serial.h"
 
@@ -35,12 +36,6 @@ volatile RunState runState;
 volatile bool stateAC;  // produce AC waveform
 volatile t_breakerState breakerState = eNormal;
 volatile unsigned long long runDelayTimerStartTick;
-
-volatile short maxPower;
-volatile short nowPower=100;
-float fnowPower = 100;
-volatile bool bLimitPower;
-
 
 char * my_itoa(int n, int maxVal = 100000);
 
@@ -66,24 +61,8 @@ void initializeCommand()
 	doRunJustBooted();
 }
 
-void setMaxPower(int newMax){
-	if (newMax == 0) {
-		bLimitPower = false;
-		return;
-	} 
-	bLimitPower = true;
-	maxPower = newMax;
-}
-int getPower(){
-	return nowPower;
-}
 
-#define ADJUSTMENT_TIME_CONSTANT 10
-void adjustPower(float adjustment){
-	fnowPower = std::max(100.0f, fnowPower*(1 + adjustment/ADJUSTMENT_TIME_CONSTANT));
-	nowPower = fnowPower;
-}
-void setBreaker(t_breakerState newState, float f_IIN, float f_IOUT)
+void setBreaker(t_breakerState newState, float f_IIN, float max_IIN, float f_IOUT, float max_IOUT)
 {
 	breakerState = newState;
 	switch(newState) {
@@ -95,20 +74,22 @@ void setBreaker(t_breakerState newState, float f_IIN, float f_IOUT)
 		break;
 	case eEmergency:
 		pSerialOutToConsole->puts("\r\nEmergency:"); 
+		break;
 	}
 values:
+	pSerialOutToConsole->puts("Iin:");
 	pSerialOutToConsole->puts(my_itoa(f_IIN));
-	pSerialOutToConsole->puts(":");
+	pSerialOutToConsole->puts("Iout:");
 	pSerialOutToConsole->puts(my_itoa(f_IOUT));
 	pSerialOutToConsole->puts("\r\n");
 }
 
 void setBreakerRearm(int value){
-	if (value != 0) {
+	if (value != 0) {// command ar=1 : rearm
 		breakerState = eNormal;
 		doRunJustBooted();
-	} else {
-		setBreaker(eOver, 100, 100);
+	} else { // command ar=  break
+		setBreaker(eEmergency, 100, 99, 100, 99);
 	}
 }
 
@@ -287,8 +268,10 @@ int _countT2 = 0 * COUNT_PER_NS;
 void sendSerial(const char* message){
 	pSerialOutToConsole->puts(message);
 }
-void statusDisplay(void){
-	pSerialOutToConsole->puts("    rt\t    z1\t    d1\t    r1\t    v1\t     z2\t    d2\t    r2\t    v2\n\r");
+void statusDisplay(bool bHeader){
+	if (bHeader) {
+		pSerialOutToConsole->puts("    rt\t    z1\t    d1\t    r1\t    v1\t     z2\t    d2\t    r2\t    v2\n\r");
+	}
 	pSerialOutToConsole->puts(my_itoa(_rt));
 	pSerialOutToConsole->puts("\t");
 	pSerialOutToConsole->puts(my_itoa(_countZ1 / COUNT_PER_NS));
@@ -329,22 +312,43 @@ void temperaturesDisplay(int reinit)
 	}
 }
 
-void measurementsDisplay()
+void measurementsDisplay(bool bHeader, int paragraph)
 {
-	pSerialOutToConsole->puts(my_itoa(fM_VIN / 1000)); 			pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_V225 / 1000)); 		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_IHFL  * 1000));		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_VOUT1 / 1000)) ;		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_VOUT2 / 1000)) ;		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_Temp));				pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(mvCorrectionFactor * 1000)) ;		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_V175 / 1000)) ;		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_IOUT * 1000)) ;		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_IH1 * 1000)) ;			pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_IH2 * 1000)) ;			pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_IIN * 1000)) ;			pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_I175 * 1000)) ;		pSerialOutToConsole->puts("\t");
-	pSerialOutToConsole->puts(my_itoa(fM_I225 * 1000)) ;
+	switch (paragraph) {
+	case 0:
+	if (bHeader) {
+		pSerialOutToConsole->puts("  Vin\t   Iin\t  Iout\t I175\t I225\tVout1\tVout2\tTemp\tV175\tV225\n\r");
+	}
+	pSerialOutToConsole->puts(my_itoa(fM_VIN / 1000,1000)); 			pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IIN * 1000, 100000)); pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IOUT * 1000, 100000)); pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_I175 * 1000, 10000)); pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_I225 * 1000, 10000));
+	pSerialOutToConsole->puts(my_itoa(fM_VOUT1 / 1000,1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_VOUT2 / 1000,1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_Temp,1000));				pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_V175 / 1000,1000)) ;		pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_V225 / 1000, 1000)); pSerialOutToConsole->puts("\t");
+			break;
+	case 1:
+		if (bHeader) {
+			pSerialOutToConsole->puts("Factor\tIhfl\tIh1\tIh2\t     \t    \t    \t    \n\r");
+		}
+	pSerialOutToConsole->puts(my_itoa(mvCorrectionFactor * 1000, 10000)); pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IHFL  * 1000, 100000)); pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IH1 * 1000, 100000)); pSerialOutToConsole->puts("\t");
+	pSerialOutToConsole->puts(my_itoa(fM_IH2 * 1000, 100000)); pSerialOutToConsole->puts("\t");
+		break;
+	case 2:
+		if (bHeader) {
+			pSerialOutToConsole->puts("PowL\tPow\tFan\tTHD\tIh2\t     \t    \t    \t    \n\r");
+		}
+		pSerialOutToConsole->puts(my_itoa(getPowerLimitFlag ()? 999 : getMaxPower(), 1000)); pSerialOutToConsole->puts("\t");
+		pSerialOutToConsole->puts(my_itoa(getPower(),100)); pSerialOutToConsole->puts("\t");
+		pSerialOutToConsole->puts(my_itoa(getFanSpeed(), 100)); pSerialOutToConsole->puts("\t");
+		pSerialOutToConsole->puts(my_itoa(get3HD()*100,100)); pSerialOutToConsole->puts("\t");
+
+	}
 	pSerialOutToConsole->puts("\n\r");
 }
 
@@ -546,7 +550,7 @@ void processCommand(commandAndValue cv)
 {
 	switch (cv.command) {
 	case st: // display state
-		statusDisplay();
+		statusDisplay(cv.value==0);
 		break;
 	case rt:
 		setRt(cv.value);
@@ -580,14 +584,19 @@ void processCommand(commandAndValue cv)
 		break;
 	case ac:
 		setACState(cv.value);
+		break;
 	case ar:
 		setBreakerRearm(cv.value);
+		break;
 	case sm:
-		measurementsDisplay();
+		measurementsDisplay(cv.value<10,cv.value<10?cv.value:cv.value-10);
+		break;
 	case po:
 		setMaxPower(cv.value);
+		break;
 	case fa:
-		setFanPWM(cv.value);
+		setFanSpeed(cv.value);
+		break;
 	case none:
 	default:
 		;
@@ -616,6 +625,17 @@ char * my_itoa(int n, int maxVal)
 	if (n < 0) {
 		negative = true;
 		n = -n;
+		if (n>maxVal/10){
+			message[i++] = '-';
+			message[i++] = '#';
+			message[i] = 0;
+			return &message[0];
+		}
+	}
+	if (n > maxVal) {
+		message[i++] = '#';
+		message[i] = 0;
+		return &message[0];
 	}
 	while (maxVal > 9 && (d = n / maxVal) == 0) {
 		leadingZeros++;
@@ -635,6 +655,6 @@ char * my_itoa(int n, int maxVal)
 		n = n % maxVal;
 		maxVal = maxVal / 10;
 	}
-	message[i + 1] = 0;
+	message[i] = 0;
 	return &message[0];
 }

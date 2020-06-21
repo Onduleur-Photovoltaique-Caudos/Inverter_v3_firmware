@@ -27,6 +27,10 @@ void doStopZVS(bool newValue);
 unsigned long long getMeasureCount();
 char * getMeasureStats(int what,char* message);
 
+float getIIN();
+
+float getVIN();
+
 #ifdef __cplusplus
 extern "C"
 {

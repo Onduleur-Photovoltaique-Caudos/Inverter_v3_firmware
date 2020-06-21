@@ -6,9 +6,8 @@ typedef enum {
 	eEmergency
 } t_breakerState;
 
-void setBreaker(t_breakerState newState,float f_IIN, float f_IOUT);
-int getPower();
-void adjustPower(float adjustment);
+void setBreaker(t_breakerState newState,float f_IIN,float max_IIN, float f_IOUT, float max_IOUT);
+
 
 bool isRun();
 void doRunStop();
