@@ -26,6 +26,9 @@ void setV2(float val);
 void doStopZVS(bool newValue);
 unsigned long long getMeasureCount();
 char * getMeasureStats(int what,char* message);
+int getMeasurementRecordCount();
+float getMeasurementNextRecord();
+void reEnableTripRecording();
 
 float getIIN();
 

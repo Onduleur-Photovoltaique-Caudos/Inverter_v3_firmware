@@ -4,6 +4,7 @@ extern "C"
 }
 #include "stm32f3xx_hal.h"
 #include "Command.h"
+#include "Loop.h"
 #include "Waveform.h"
 #include "gpio.h"
 #include <cstring>
@@ -37,8 +38,6 @@ volatile bool stateAC;  // produce AC waveform
 volatile t_breakerState breakerState = eNormal;
 volatile unsigned long long runDelayTimerStartTick;
 
-char * my_itoa(int n, int maxVal = 100000);
-
 void initializeCommand()
 {
 	setRt(10);
@@ -61,7 +60,23 @@ void initializeCommand()
 	doRunJustBooted();
 }
 
+void logMessage(const char * message){
+	pSerialOutToConsole->puts(message);
+}
 
+void displayRecordedMeasurements()
+{
+	int recordCount = getMeasurementRecordCount();
+	for (int i = 0; i < recordCount; i++) {
+		pSerialOutToConsole->puts(my_itoa(getMeasurementNextRecord() * 10)); pSerialOutToConsole->puts("\t");
+	}
+	pSerialOutToConsole->puts("\r\n");
+}
+
+t_breakerState getBreakerState()
+{
+	return breakerState;
+}
 void setBreaker(t_breakerState newState, float f_IIN, float max_IIN, float f_IOUT, float max_IOUT)
 {
 	breakerState = newState;
@@ -69,19 +84,12 @@ void setBreaker(t_breakerState newState, float f_IIN, float max_IIN, float f_IOU
 	case eNormal:
 		break;
 	case eOver:
-		pSerialOutToConsole->puts("\r\nOvercurrent:");
-		goto values;
+		queueMessage(Message(eMCOvercurrent,f_IIN,f_IOUT));
 		break;
 	case eEmergency:
-		pSerialOutToConsole->puts("\r\nEmergency:"); 
+		queueMessage(Message(eMCEmergency, f_IIN, f_IOUT));
 		break;
 	}
-values:
-	pSerialOutToConsole->puts("Iin:");
-	pSerialOutToConsole->puts(my_itoa(f_IIN));
-	pSerialOutToConsole->puts("Iout:");
-	pSerialOutToConsole->puts(my_itoa(f_IOUT));
-	pSerialOutToConsole->puts("\r\n");
 }
 
 void setBreakerRearm(int value){
@@ -341,10 +349,11 @@ void measurementsDisplay(bool bHeader, int paragraph)
 		break;
 	case 2:
 		if (bHeader) {
-			pSerialOutToConsole->puts("PowL\tPow\tFan\tTHD\tIh2\t     \t    \t    \t    \n\r");
+			pSerialOutToConsole->puts("PowF\tPowL\tPow\tFan\tTHD\tIh2\t     \t    \t    \t    \n\r");
 		}
 		pSerialOutToConsole->puts(my_itoa(getPowerLimitFlag ()? 999 : getMaxPower(), 1000)); pSerialOutToConsole->puts("\t");
-		pSerialOutToConsole->puts(my_itoa(getPower(),100)); pSerialOutToConsole->puts("\t");
+		pSerialOutToConsole->puts(my_itoa(getPowerLimit(),100)); pSerialOutToConsole->puts("\t");
+		pSerialOutToConsole->puts(my_itoa(getPowerIn(), 10000)); pSerialOutToConsole->puts("\t");
 		pSerialOutToConsole->puts(my_itoa(getFanSpeed(), 100)); pSerialOutToConsole->puts("\t");
 		pSerialOutToConsole->puts(my_itoa(get3HD()*100,100)); pSerialOutToConsole->puts("\t");
 
@@ -412,6 +421,11 @@ void setT2(int val)
 	_countT2 = count;
 	doT2();
 	doUpdateTimA();
+}
+
+void doEmergencyStop()
+{
+	setRt(0);
 }
 void setRt(int valRt)
 {
@@ -482,7 +496,7 @@ commandAndValue getCommand() {
 	command = none;
 	bool hasValue = false;
 	int value = 0;
-	const char commandList[] = "srazdtf";
+	const char commandList[] = "srazdtvf";
 	char *commandListPtr;
 	const char numbers12[] = "12";
 	const char numbers[] = "0123456789";

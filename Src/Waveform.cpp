@@ -1,6 +1,7 @@
 #include "Waveform.h"
 #include "Command.h"
 #include "Measure.h"
+#include "gpio.h"
 #include "tim.h"
 #include <cmath>
 #include "Temperature.h"
@@ -39,10 +40,10 @@ static bool bPositive=true;
 static volatile bool bStopped = true;
 float fVH3I, fVH3D, fVH3M;
 
-volatile short maxPower;
-volatile short nowPower = 100;
-float fnowPower = 100;
 volatile bool bLimitPower;
+volatile short powerLimit;
+volatile short nowPowerAdjust = 100;
+float fnowPowerAdjust = 100;
 
 bool doNextWaveformSegment()
 {
@@ -67,12 +68,13 @@ bool doNextWaveformSegment()
 		}
 	} else {
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) { // zeroCrossing here
+			doPsenseToggle();
 		// compute harmonic distorsion to limit power
 			if (isAC()) {
 				  // AC sine waveform generation
-					setOutputSlowSwitch(bPositive);
+					//setOutputSlowSwitch(bPositive);
 			} else {
-				setOutputSlowSwitch(true);
+				//setOutputSlowSwitch(true);
 			}
 		}
 		waveformIndex--;
@@ -84,7 +86,7 @@ bool doNextWaveformSegment()
 	int nIndex = waveformIndex;
 
 	if (isAC()){  // AC sine waveform generation
-		setRt(iCosine[nIndex]*getPower()/100);
+		setRt(iCosine[nIndex]*getPowerLimit()/100);
 	}
 	return bZeroCrossing;
 }
@@ -99,7 +101,7 @@ void doWaveformStep()
 	} else {
 		bool bZeroCrossing = doNextWaveformSegment();
 		if (bZeroCrossing) {
-			doTemperatureAcquisitionStep();
+			//doTemperatureAcquisitionStep();
 		}
 		if (bZeroCrossing && !isRun()) {
 			// we prefer to stop at zero crossing
@@ -116,18 +118,18 @@ void setMaxPower(int newMax)
 		return;
 	} 
 	bLimitPower = true;
-	maxPower = newMax;
+	powerLimit = newMax;
 }
 int getMaxPower()
 {
-	return maxPower;
+	return powerLimit;
 }
 bool getPowerLimitFlag(){
 	return bLimitPower;
 }
-int getPower()
+int getPowerLimit()
 {
-	return nowPower;
+	return nowPowerAdjust;
 }
 
 float harmonicDistortion;
@@ -146,10 +148,10 @@ static float compute3HD() // third harmonic distortion
 
 static void adjustPower(float adjustment)
 {
-	fnowPower = std::max(100.0f, fnowPower*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT));
-	nowPower = fnowPower;
-	if (bLimitPower && nowPower > maxPower) {
-		nowPower = maxPower;
+	fnowPowerAdjust = std::max(100.0f, fnowPowerAdjust*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT));
+	nowPowerAdjust = fnowPowerAdjust;
+	if (bLimitPower && nowPowerAdjust > powerLimit) {
+		nowPowerAdjust = powerLimit;
 	}
 }
 
@@ -175,13 +177,20 @@ void setFanSpeed(int newSpeed)
 	}
 }
 
+float powerIn;
 void doAdjustFanSpeed()
 {
+	static float fFanSpeed = 20.0f;
 	if (bFanSpeedIsDefined){
 		return;
 	}
-	float powerIn;
 	powerIn = getIIN()*getVIN() / 1000;
-	fanSpeed = powerIn / 3000;
-	setFanPWM(fanSpeed);
+	fanSpeed = 100* powerIn / 3000;
+	// do IIR first order filter
+	fFanSpeed = 0.99f * fFanSpeed + 0.01f * fanSpeed;
+	setFanPWM(fFanSpeed);
+}
+
+float getPowerIn(){
+	return powerIn;
 }

@@ -14,10 +14,11 @@ extern "C" {
 	void setMaxPower(int newMax);
 	int getMaxPower();
 	bool getPowerLimitFlag();
-	int getPower();
+	int getPowerLimit();
 	void setFanSpeed(int speed);
 	int getFanSpeed();
 	void doAdjustFanSpeed();
+	float getPowerIn();
 
 
 #ifdef __cplusplus

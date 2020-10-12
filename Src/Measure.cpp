@@ -5,6 +5,7 @@ extern "C"
 
 #include "Measure.h"
 #include "Command.h"
+#include "Loop.h"
 #include "stm32f3xx_ll_adc.h"
 #include "MedianFilter.h"
 #include "gpio.h"
@@ -67,7 +68,7 @@ unsigned short sRefInt;
 const float mvFactor0 = ADC_FULL_MEASURE_MV / ADC_STEPS;
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
-const float iOffset = 1850; // standard offset for ACS712 depends on supply voltage
+const float iOffset = 2580; // standard offset for ACS712 depends on supply voltage
 
 //2568 unit 1
 
@@ -122,18 +123,54 @@ void doStopZVS(bool newValue)
 #define START_VOLTAGE 80
 #define MAX_INPUT_CURRENT 10
 #define MAX_OUTPUT_CURRENT 20
+
+#define RECORD_COUNT 5
+typedef enum {
+	eNotTripped,
+	eTripped,
+	eTrippedNotRecording
+} eTrippedState;
+
+volatile eTrippedState trippedState;
+volatile static int trippedRecordCountdown;
+
+void reEnableTripRecording()
+{
+	trippedState = eNotTripped;
+}
 void checkOvercurrent(float f_IIN,float f_IOUT){
+	if (trippedState == eTripped) {
+		if (--trippedRecordCountdown == 0){
+			trippedState = eTrippedNotRecording;
+			queueMessage(Message(eMCCurrentMeasurementsDump));
+		}
+	}
 	if (f_IIN < MAX_INPUT_CURRENT && f_IOUT < MAX_OUTPUT_CURRENT){
+		if (getBreakerState()==eWaitConfirmation){
+			setBreaker(eNormal, f_IIN, MAX_INPUT_CURRENT, f_IOUT, MAX_OUTPUT_CURRENT);
+		}
+		return;
+	}
+	if (getBreakerState() == eNormal) {
+		setBreaker(eWaitConfirmation, f_IIN, MAX_INPUT_CURRENT, f_IOUT, MAX_OUTPUT_CURRENT);
 		return;
 	}
 	if (f_IIN / 1.5f > MAX_INPUT_CURRENT || f_IOUT / 1.5f < MAX_OUTPUT_CURRENT) {
 		//emergency stop
 		setACState(false);
-		setRt(0);
+		//setRt(0);
 		setBreaker(eEmergency, f_IIN, MAX_INPUT_CURRENT, f_IOUT, MAX_OUTPUT_CURRENT);
+		if (!trippedState == eNotTripped) {
+			trippedState = eTripped;
+			trippedRecordCountdown = RECORD_COUNT;
+		}
 	} else { // we stop a next zero crossing
 		setACState(false);
 		setBreaker(eOver, f_IIN, MAX_INPUT_CURRENT, f_IOUT, MAX_OUTPUT_CURRENT);
+		if (!trippedState == eNotTripped) {
+			trippedState = eTripped;
+			trippedRecordCountdown = RECORD_COUNT;
+		}
 	}
 }
 void adjust_225_175(float inputVoltage)
@@ -262,22 +299,49 @@ void resetADCPeriodCounters(){
 	maxADCPeriod=0;
 }
 
-static int counterStatsVoltage;
-#define MAX_BUCKETS 11
-static int bucketsStatsVoltage[MAX_BUCKETS];
-static void resetStatsVoltage(){
-	counterStatsVoltage = 0;
-	for (int i = 0; i < MAX_BUCKETS; i++) {
-		bucketsStatsVoltage[i] = 0;
+static int pointerRecordMeasurement;
+#define MAX_RECORD_MEASUREMENT 50
+static volatile float measurementRecord[MAX_RECORD_MEASUREMENT];
+
+void doRecordMeasurement(float newMeasure)
+{
+	measurementRecord[pointerRecordMeasurement++] = newMeasure;
+	if (pointerRecordMeasurement >= MAX_RECORD_MEASUREMENT){
+		pointerRecordMeasurement = 0; // implement a circular buffer;
 	}
 }
-static void doStatsVoltage(double voltage)
+
+static int startReadRecords;
+int getMeasurementRecordCount()
+{	
+	startReadRecords = pointerRecordMeasurement + 1;
+	return MAX_RECORD_MEASUREMENT;
+}
+float getMeasurementNextRecord()
 {
-	counterStatsVoltage++;
+	if (startReadRecords >= MAX_RECORD_MEASUREMENT) {
+		startReadRecords = 0;
+	}
+	return measurementRecord[startReadRecords++];
+}
+
+
+static int counterStatsMeasurement;
+#define MAX_BUCKETS 11
+static int bucketsStatsMeasurement[MAX_BUCKETS];
+static void resetStatsMeasurement(){
+	counterStatsMeasurement = 0;
+	for (int i = 0; i < MAX_BUCKETS; i++) {
+		bucketsStatsMeasurement[i] = 0;
+	}
+}
+static void doStatsMeasurement(float voltage)
+{
+	counterStatsMeasurement++;
 	if (voltage < 1.0){
-		bucketsStatsVoltage[0]++;
+		bucketsStatsMeasurement[0]++;
 	} else if (voltage > 9000.0){
-		bucketsStatsVoltage[MAX_BUCKETS-1]++;
+		bucketsStatsMeasurement[MAX_BUCKETS - 1]++;
 	} else {
 		if (voltage > 8000) {
 			voltage++;
@@ -285,7 +349,7 @@ static void doStatsVoltage(double voltage)
 			voltage++;
 		}
 		int index = (voltage / 1000.0) + 1;
-		bucketsStatsVoltage[index]++;
+		bucketsStatsMeasurement[index]++;
 	}
 }
 
@@ -306,18 +370,18 @@ char * getMeasureStats(int what, char * message){
 	case 2:
 		sprintf(message,
 			"Bucket 0:%d 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d 10:%d\r\n",
-			bucketsStatsVoltage[0],
-			bucketsStatsVoltage[1],
-			bucketsStatsVoltage[2],
-			bucketsStatsVoltage[3],
-			bucketsStatsVoltage[4],
-			bucketsStatsVoltage[5],
-			bucketsStatsVoltage[6],
-			bucketsStatsVoltage[7],
-			bucketsStatsVoltage[8],
-			bucketsStatsVoltage[9],
-			bucketsStatsVoltage[10]);
-		resetStatsVoltage();
+			bucketsStatsMeasurement[0],
+			bucketsStatsMeasurement[1],
+			bucketsStatsMeasurement[2],
+			bucketsStatsMeasurement[3],
+			bucketsStatsMeasurement[4],
+			bucketsStatsMeasurement[5],
+			bucketsStatsMeasurement[6],
+			bucketsStatsMeasurement[7],
+			bucketsStatsMeasurement[8],
+			bucketsStatsMeasurement[9],
+			bucketsStatsMeasurement[10]);
+		resetStatsMeasurement();
 	default:
 		break;
 	}
@@ -379,9 +443,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		// ADC2
 		VALIDATE(*pM_V175, *oM_V175);
 		fM_V175 = (*oM_V175) *mvFactor2 * mvCorrectionFactor; 			// test at P4  -- ok 
-		doStatsVoltage(fM_V175);
+		//doStatsMeasurement(fM_V175);
 		VALIDATE(*pM_IOUT, *oM_IOUT);
 		fM_IOUT = ((*oM_IOUT)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;      	// test at P13 pin2 (range 5V) -- bruite error, pas connecte essayer R43 R44
+		doRecordMeasurement(fM_IOUT);
 		VALIDATE(*pM_IH1, *oM_IH1);
 		fM_IH1 = ((*oM_IH1) - iOffset) *iDivider* mvCorrectionFactor;    		// test at U20 pin1 -- error lit sur IOUT
 		VALIDATE(*pM_IH2, *oM_IH2);
@@ -393,7 +458,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		VALIDATE(*pM_I225, *oM_I225);
 		fM_I225 = ((*oM_I225)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;     	// test at P9 pin2 range 5V -- OK
 
-		checkOvercurrent(fM_IIN, fM_IOUT);
+//		checkOvercurrent(fM_IIN, fM_IOUT);
 		adjust_225_175(fM_VIN);
 		doSyncSerialOff();
 
