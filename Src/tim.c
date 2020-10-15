@@ -502,44 +502,133 @@ GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
 HAL_GPIO_Init(Led_GPIO_Port, &GPIO_InitStruct);
 }
 
+void setH1_HON(bool on) // TIM1_CH1N
+{
+	TIM_TypeDef *TIMx = htim1.Instance;
+	uint32_t tmpccer;
+
+	/* Get the TIMx CCER register value */
+	tmpccer = TIMx->CCER;
+
+	/* Reset the Output Polarity level */
+	tmpccer &= ~TIM_CCER_CC1NP;
+	/* Set the Output Compare Polarity */
+	if (on)
+		tmpccer |= (TIM_OCNPOLARITY_LOW); 
+	else
+		tmpccer |= (TIM_OCNPOLARITY_HIGH); 
+
+	/* Write to TIMx CCER */
+	TIMx->CCER = tmpccer;
+}
+void setH2_HON(bool on) // TIM1_CH2
+{
+	TIM_TypeDef *TIMx = htim1.Instance;
+	uint32_t tmpccer;
+
+	/* Get the TIMx CCER register value */
+	tmpccer = TIMx->CCER;
+
+	/* Reset the Output Polarity level */
+	tmpccer &= ~TIM_CCER_CC2P;
+	/* Set the Output Compare Polarity */
+	if (on)
+		tmpccer |= (TIM_OCPOLARITY_LOW  << 4U); 
+	else
+		tmpccer |= (TIM_OCPOLARITY_HIGH  << 4U);
+
+	/* Write to TIMx CCER */
+	TIMx->CCER = tmpccer;
+}
+void setH1_LON(bool on) // TIM1_CH1
+{
+	TIM_TypeDef *TIMx = htim1.Instance;
+	uint32_t tmpccer;
+
+	/* Get the TIMx CCER register value */
+	tmpccer = TIMx->CCER;
+
+	/* Reset the Output Polarity level */
+	tmpccer &= ~TIM_CCER_CC1P;
+	/* Set the Output Compare Polarity */
+	if (on)
+		tmpccer |= TIM_OCPOLARITY_LOW; 
+	else
+		tmpccer |= TIM_OCPOLARITY_HIGH; 
+
+	/* Write to TIMx CCER */
+	TIMx->CCER = tmpccer;
+}
+void setH2_LON(bool on) // TIM1_CH2N
+{
+	TIM_TypeDef *TIMx = htim1.Instance;
+	uint32_t tmpccer;
+
+	/* Get the TIMx CCER register value */
+	tmpccer = TIMx->CCER;
+
+	/* Reset the Output Polarity level */
+	tmpccer &= ~TIM_CCER_CC2NP;
+	/* Set the Output Compare Polarity */
+	if (on)
+		tmpccer |= (TIM_OCNPOLARITY_LOW  << 4U);
+	else
+		tmpccer |= (TIM_OCNPOLARITY_HIGH << 4U); 
+
+	/* Write to TIMx CCER */
+	TIMx->CCER = tmpccer;
+}
 void setOutputSlowSwitch(bool bPositive){
 	static bool bInitialized;
 
-	if (!bInitialized) {
+	if (bInitialized) {
+		if (bPositive) {
+			setH2_HON(true);
+			setH2_LON(true);
+			delay_us_DWT(1);
+			setH1_LON(true);
+			setH1_HON(true);
+		} else {
+			setH1_HON(false);
+			delay_us_DWT(1);
+			setH1_LON(false);
+			delay_us_DWT(1);
+			setH2_LON(false);
+			setH2_HON(false);
+		}
+	} else {
 		HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_1); 
 		HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_1); 
 		HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_2);
 		HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_2); 
+
+		TIM_OC_InitTypeDef sConfigOC;
+		sConfigOC.Pulse = 0;
+		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+		sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+		sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+
+		sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+		sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
+		if (bPositive) {
+			sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
+		} else {
+			sConfigOC.OCMode = TIM_OCMODE_FORCED_INACTIVE;
+		}
+		if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
+			Error_Handler();
+		}
+		if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+			Error_Handler();
+		}
+
+
+		HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
+		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
+		HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
+		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
 		bInitialized = true;
 	}
-
-
-	TIM_OC_InitTypeDef sConfigOC;
-	sConfigOC.Pulse = 0;
-	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-
-
-	sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
-	if (bPositive) {
-		sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
-	} else {
-		sConfigOC.OCMode = TIM_OCMODE_FORCED_INACTIVE;
-	}
-	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
-		Error_Handler();
-	}
-    if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
-		Error_Handler();
-	}
-
-
-	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
-	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
 
 }
 /* USER CODE END 1 */
