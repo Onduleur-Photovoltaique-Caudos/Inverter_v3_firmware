@@ -503,16 +503,23 @@ HAL_GPIO_Init(Led_GPIO_Port, &GPIO_InitStruct);
 }
 
 void setOutputSlowSwitch(bool bPositive){
-	HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_1); 
-	HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_1); 
-	HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_2);
-	HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_2); 
+	static bool bInitialized;
+
+	if (!bInitialized) {
+		HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_1); 
+		HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_1); 
+		HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_2);
+		HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_2); 
+		bInitialized = true;
+	}
+
 
 	TIM_OC_InitTypeDef sConfigOC;
 	sConfigOC.Pulse = 0;
 	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
 	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+
 
 	sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
 	sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
@@ -524,15 +531,15 @@ void setOutputSlowSwitch(bool bPositive){
 	if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
 		Error_Handler();
 	}
-
     if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
 		Error_Handler();
 	}
 
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
+
 	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
 	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
 
 }
 /* USER CODE END 1 */

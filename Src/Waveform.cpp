@@ -74,7 +74,7 @@ bool doNextWaveformSegment()
 				  // AC sine waveform generation
 					//setOutputSlowSwitch(bPositive);
 			} else {
-				//setOutputSlowSwitch(true);
+				setOutputSlowSwitch(bPositive);
 			}
 		}
 		waveformIndex--;
