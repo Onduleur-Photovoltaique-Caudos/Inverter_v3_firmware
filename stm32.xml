@@ -2,10 +2,12 @@
 <EmbeddedProfile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ToolchainID>com.visualgdb.arm-eabi</ToolchainID>
   <ToolchainVersion>
-    <Revision>0</Revision>
+    <GCC>9.3.1</GCC>
+    <GDB>9.2.0</GDB>
+    <Revision>2</Revision>
   </ToolchainVersion>
   <BspID>com.sysprogs.arm.stm32</BspID>
-  <BspVersion>2020.06</BspVersion>
+  <BspVersion>2020.10</BspVersion>
   <McuID>STM32F334R8</McuID>
   <MCUDefinitionFile>STM32F3xxxx/DeviceDefinitions/stm32f334x8.xml</MCUDefinitionFile>
   <MCUProperties>
@@ -32,10 +34,6 @@
       <KeyValue>
         <Key>com.sysprogs.toolchainoptions.arm.libnosys</Key>
         <Value />
-      </KeyValue>
-      <KeyValue>
-        <Key>com.sysprogs.toolchainoptions.arm.compactcpp</Key>
-        <Value>compactcpp</Value>
       </KeyValue>
     </Entries>
   </MCUProperties>

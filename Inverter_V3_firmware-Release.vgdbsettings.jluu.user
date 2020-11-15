@@ -11,11 +11,10 @@
     </CatchpointConfiguration>
     <MaskInterruptsWhileStepping>false</MaskInterruptsWhileStepping>
     <MemoryWindowPreferences />
-    <FavoriteEmbeddedRegisters />
     <LiveVariables>
       <LiveVariable>
         <Expression>fM_IIN</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -23,10 +22,11 @@
         </Breakpoint>
         <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_IOUT</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -34,21 +34,23 @@
         </Breakpoint>
         <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_VIN</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>false</Plot>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_VOUT1</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -56,10 +58,11 @@
         </Breakpoint>
         <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_VOUT2</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -67,10 +70,11 @@
         </Breakpoint>
         <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_I175</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -78,10 +82,11 @@
         </Breakpoint>
         <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_I225</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -89,10 +94,11 @@
         </Breakpoint>
         <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_V175</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -100,10 +106,11 @@
         </Breakpoint>
         <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
       <LiveVariable>
         <Expression>fM_V225</Expression>
-        <Type>Float32</Type>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
           <ComparisonMode>Equals</ComparisonMode>
@@ -111,8 +118,22 @@
         </Breakpoint>
         <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
       </LiveVariable>
     </LiveVariables>
-    <NestedLiveVariableSettings />
+    <NestedLiveVariables>
+      <NestedVariableSettingsCollection>
+        <ID>com.sysprogs.AllGlobals</ID>
+        <Variables />
+      </NestedVariableSettingsCollection>
+      <NestedVariableSettingsCollection>
+        <ID>com.sysprogs.SpecificVariables</ID>
+        <Variables />
+      </NestedVariableSettingsCollection>
+    </NestedLiveVariables>
+    <Suggestions>
+      <HardwareRegisterFilters />
+    </Suggestions>
+    <HardwareRegisters />
   </DebugPreferences>
 </VisualGDBUserPreferences>

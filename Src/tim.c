@@ -38,9 +38,9 @@ void MX_TIM1_Init(void)
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 512;
+  htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 2047;
+  htim1.Init.Period = 63999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -87,7 +87,7 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 500;
+  sConfigOC.Pulse = 30000;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
@@ -96,7 +96,7 @@ void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 10;
+  sBreakDeadTimeConfig.DeadTime = 25;
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
@@ -177,7 +177,7 @@ void MX_TIM3_Init(void)
   }
   sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
   sSlaveConfig.InputTrigger = TIM_TS_ITR1;
-  if (HAL_TIM_SlaveConfigSynchronization(&htim3, &sSlaveConfig) != HAL_OK)
+  if (HAL_TIM_SlaveConfigSynchro(&htim3, &sSlaveConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -227,7 +227,7 @@ void MX_TIM15_Init(void)
   }
   sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
   sSlaveConfig.InputTrigger = TIM_TS_ITR0;
-  if (HAL_TIM_SlaveConfigSynchronization(&htim15, &sSlaveConfig) != HAL_OK)
+  if (HAL_TIM_SlaveConfigSynchro(&htim15, &sSlaveConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -578,10 +578,88 @@ void setH2_LON(bool on) // TIM1_CH2N
 	/* Write to TIMx CCER */
 	TIMx->CCER = tmpccer;
 }
+void setOutputCHAll(bool bActive)
+{
+	uint32_t tmpccmrx;
+	TIM_TypeDef *TIMx = htim1.Instance;
+
+	/* Get the TIMx CCMR1 register value */
+	tmpccmrx = TIMx->CCMR1;
+	/* Reset the Output Compare Mode Bits */
+	tmpccmrx &= ~TIM_CCMR1_OC1M;
+	tmpccmrx &= ~TIM_CCMR1_CC1S;
+	tmpccmrx &= ~TIM_CCMR1_OC2M;
+	tmpccmrx &= ~TIM_CCMR1_CC2S;
+	/* Select the Output Compare Mode */
+	if (bActive) {
+		tmpccmrx |= TIM_OCMODE_FORCED_ACTIVE;
+		tmpccmrx |= (TIM_OCMODE_FORCED_INACTIVE << 8U); 
+	} else {
+		tmpccmrx |= TIM_OCMODE_FORCED_INACTIVE;
+		tmpccmrx |= (TIM_OCMODE_FORCED_ACTIVE << 8U); 
+	}
+
+	/* Write to TIMx CCMR1 */
+	TIMx->CCMR1 = tmpccmrx;
+}
+void setOutputCH1(bool bActive)
+{
+	uint32_t tmpccmrx;
+	TIM_TypeDef *TIMx = htim1.Instance;
+
+	/* Get the TIMx CCMR1 register value */
+	tmpccmrx = TIMx->CCMR1;
+	/* Reset the Output Compare Mode Bits */
+	tmpccmrx &= ~TIM_CCMR1_OC1M;
+	tmpccmrx &= ~TIM_CCMR1_CC1S;
+	/* Select the Output Compare Mode */
+	if (bActive)
+		tmpccmrx |= TIM_OCMODE_FORCED_ACTIVE;
+	else
+		tmpccmrx |= TIM_OCMODE_FORCED_INACTIVE;
+
+	/* Write to TIMx CCMR1 */
+	TIMx->CCMR1 = tmpccmrx;
+}
+void setOutputCH2(bool bActive)
+{
+	uint32_t tmpccmrx;
+	TIM_TypeDef *TIMx = htim1.Instance;
+
+	/* Get the TIMx CCMR1 register value */
+	tmpccmrx = TIMx->CCMR1;
+	/* Reset the Output Compare mode and Capture/Compare selection Bits */
+	tmpccmrx &= ~TIM_CCMR1_OC2M;
+	tmpccmrx &= ~TIM_CCMR1_CC2S;
+
+	/* Select the Output Compare Mode */
+	if (bActive)
+		tmpccmrx |= (TIM_OCMODE_FORCED_ACTIVE << 8U); 
+	else
+		tmpccmrx |= (TIM_OCMODE_FORCED_INACTIVE << 8U); 
+
+	/* Write to TIMx CCMR1 */
+	TIMx->CCMR1 = tmpccmrx;
+}
 void setOutputSlowSwitch(bool bPositive){
 	static bool bInitialized;
 
 	if (bInitialized) {
+		setOutputCHAll(bPositive);
+#if 0
+		if (bPositive) {
+			setOutputCH2(false);
+//			setOutputCH2(false);
+			setOutputCH2(false);
+			setOutputCH1(true);
+		} else {
+			setOutputCH1(false);
+//			setOutputCH1(false);
+			setOutputCH1(false);
+			setOutputCH2(true);
+		}
+#endif
+		#if 0
 		if (bPositive) {
 			setH2_HON(true);
 			setH2_LON(true);
@@ -596,6 +674,7 @@ void setOutputSlowSwitch(bool bPositive){
 			setH2_LON(false);
 			setH2_HON(false);
 		}
+		#endif
 	} else {
 		HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_1); 
 		HAL_TIMEx_OCN_Stop(&htim1, TIM_CHANNEL_1); 
@@ -608,8 +687,8 @@ void setOutputSlowSwitch(bool bPositive){
 		sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
 		sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 
-		sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-		sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
+		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+		sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
 		if (bPositive) {
 			sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
 		} else {

@@ -68,7 +68,7 @@ unsigned short sRefInt;
 const float mvFactor0 = ADC_FULL_MEASURE_MV / ADC_STEPS;
 const float mvFactor1 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_400V / RESISTOR_3V;
 const float mvFactor2 = ADC_FULL_MEASURE_MV / ADC_STEPS * RESISTOR_200V / RESISTOR_3V;
-const float iOffset = 2580; // standard offset for ACS712 depends on supply voltage
+const float iOffset = 2520; // standard offset for ACS712 depends on supply voltage
 
 //2568 unit 1
 
@@ -88,7 +88,7 @@ static unsigned short compare_225 = period / 2;
 static unsigned short compare_175 = period / 2;
 
 //pid factor
-#define P_factorInv 8
+#define P_factorInv 16
 
 bool stopped_225;
 bool stopped_175;
@@ -117,7 +117,7 @@ static bool stoppedZVS;
 
 void doStopZVS(bool newValue)
 {
-	stoppedZVS = newValue;
+	//stoppedZVS = newValue;
 }
 
 #define START_VOLTAGE 80
@@ -198,7 +198,7 @@ void adjust_225_175(float inputVoltage)
 	diff =  (diff ? sign_or_0 : 0) + diff * max(compare_225, 96) / 40000;
 
 	compareCfg.CompareValue = min(period - 96, max(95, compare_225 - diff));
-	//compareCfg.CompareValue = 8500;  // debug: force 50% TODO remove
+	//compareCfg.CompareValue = period / 3;  // debug: force it TODO remove
 	compare_225 = compareCfg.CompareValue; // remember previous value;
 
 	if(compareCfg.CompareValue < 96 || stoppedZVS)
@@ -231,11 +231,12 @@ void adjust_225_175(float inputVoltage)
 	
 		// 175V TC1 PB12  test pin P2
 		// 175 Timer C1 -> PB12 C_175  -> P2 -> U1(1) -> P24(1) -> Q2 L2 Q4 D4 
-	diff = diff_175 * period / P_factorInv *4;
+	diff = diff_175 * period / P_factorInv;
 	sign_or_0 = (0 < diff) - (diff < 0);
 	diff =  (diff ? sign_or_0 : 0) + diff *  max(compare_175, 96) / 40000;
 
-	compareCfg.CompareValue = min(period - 96, max(200/*95*/, compare_175 + diff));
+	compareCfg.CompareValue = min(period - 96, max(95, compare_175 + diff));
+	//compareCfg.CompareValue = period / 3;
 	compare_175 = compareCfg.CompareValue;
 
 	if (compareCfg.CompareValue < 96 || stoppedZVS) {
@@ -246,7 +247,7 @@ void adjust_225_175(float inputVoltage)
 			HRTIM_TIMERINDEX_TIMER_C,
 			HRTIM_OUTPUT_TC1,
 			HRTIM_OUTPUTLEVEL_INACTIVE);
-	} else if (false && compareCfg.CompareValue >= period - 96) { // force active
+	} else if (compareCfg.CompareValue >= period - 96) { // force active
 		if(stopped_175)	{
 			HAL_HRTIM_WaveformOutputStart(&hhrtim1,
 				HRTIM_OUTPUT_TC1);
@@ -398,7 +399,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 {// end of DMA
 	measureCount++;
 	if (isADC_EOC(adcHandle)){
-		doPsenseToggle();
+		//doPsenseToggle();
 		//Error_Handler();// we should not be there
 		countEOC++;
 		return;
