@@ -68,13 +68,13 @@ bool doNextWaveformSegment()
 		}
 	} else {
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) { // zeroCrossing here
-			doPsenseToggle();
+			//doPsenseToggle();
 		// compute harmonic distorsion to limit power
 			if (isAC()) {
 				  // AC sine waveform generation
 					//setOutputSlowSwitch(bPositive);
 			} else {
-				setOutputSlowSwitch(bPositive);
+				//setOutputSlowSwitch(bPositive);
 			}
 		}
 		waveformIndex--;

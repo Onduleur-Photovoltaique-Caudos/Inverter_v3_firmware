@@ -493,6 +493,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 		// this happens at the start of ADC acquisition
 		// 9us before XferCplt (release) or 15us (debug)
 		//
+		doPsenseToggle();
 		if(0 && doneADC) {
 			// here some processing if needed
 			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);

@@ -224,7 +224,7 @@ int main(void)
 
 #define DEBUG_LOCK_OUTPUT_SWITCHES 0 // fix the output switches to study high frequency switching
 
-#if 1 
+#if 0
 	setOutputSlowSwitch(true);
 	
 	//HAL_TIM_Base_Start(&htim1);
@@ -236,11 +236,11 @@ int main(void)
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 
 #else
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1); 
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2); 
-
+	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_1);
+	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_2); 
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 #endif
 
 	initializeCommand();
