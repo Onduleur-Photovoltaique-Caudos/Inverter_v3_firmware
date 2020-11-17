@@ -43,12 +43,12 @@ void initializeCommand()
 	setRt(10);
 
 	setT1(20);
-	setZ1(130);
+	setZ1(180);
 	setD1(-20);
 	setV1(140);
 
 	setT2(20);
-	setZ2(130);
+	setZ2(180);
 	setD2(-20);
 	setV2(220);
 

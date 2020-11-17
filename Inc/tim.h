@@ -49,6 +49,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* USER CODE BEGIN Prototypes */
 void setFanPWM(unsigned short rT);
 void	 setOutputSlowSwitch(bool bPositive);
+void setChannelDelayTime(int newChannelDelayTime);
+void setDeadTime(int newDeadTime);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
