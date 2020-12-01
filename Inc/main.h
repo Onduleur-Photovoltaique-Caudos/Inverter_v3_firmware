@@ -58,7 +58,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define baseChannel2Time 32770
+#define baseChannel2Time 31999
+#define periodTim1 64000
+#define hrtimPeriod 16000
+#define zeroSwitchDelay 10
 #define Fan_Pin GPIO_PIN_0
 #define Fan_GPIO_Port GPIOF
 #define Disable_Pin GPIO_PIN_1

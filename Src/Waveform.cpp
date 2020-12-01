@@ -34,7 +34,8 @@ int iCosine[] = { 92,
 0
 };
 
-static int waveformIndex = WAVEFORM_SEGMENTS / 2 -1;
+static int zeroCrossingWaveformIndex = WAVEFORM_SEGMENTS / 2 -1;
+static int waveformIndex = 0;
 static bool bPositive=true;
 
 static volatile bool bStopped = true;
@@ -45,10 +46,17 @@ volatile short powerLimit;
 volatile short nowPowerAdjust = 100;
 float fnowPowerAdjust = 100;
 
+bool bIncreasing = true;
 bool doNextWaveformSegment()
 {
 	bool bZeroCrossing = false;
-	static bool bIncreasing = true;
+
+	if (bIncreasing) {
+		waveformIndex++;
+	} else {
+		waveformIndex--;
+	}
+
 	if (waveformIndex == (WAVEFORM_SEGMENTS / 6)) {
 		 // measure harmonic 3 of input voltage here
 		 if (bIncreasing){
@@ -58,57 +66,78 @@ bool doNextWaveformSegment()
 		}
 	}
 	if (bIncreasing) {
-		waveformIndex++;
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
-			// measure peak of input voltage here
-			fVH3M = fM_VIN;
 			bIncreasing = false;
 			bPositive = !bPositive;
 			bZeroCrossing = true;
 		}
 	} else {
-		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) { // zeroCrossing here
-			//doPsenseToggle();
-		// compute harmonic distorsion to limit power
-			if (isAC()) {
-				  // AC sine waveform generation
-					//setOutputSlowSwitch(bPositive);
-			} else {
-				//setOutputSlowSwitch(bPositive);
-			}
-		}
-		waveformIndex--;
 		if (waveformIndex <= 0) {
 			bIncreasing = true;
+			// measure peak of input voltage here
+			fVH3M = fM_VIN;
 		}
 	}
 
 	int nIndex = waveformIndex;
 
-	if (isAC()){  // AC sine waveform generation
+	if (getACState()) {
+		  // AC sine waveform generation
 		setRt(iCosine[nIndex]*getPowerLimit()/100);
 	}
 	return bZeroCrossing;
 }
 
+static bool bUpDown;
+
+void doResetUpDown()
+{
+	bUpDown = false;
+}
 
 void doWaveformStep()
 {
-	//	doLedOn();
-	if(bStopped)
+
+	if(getACState())
 	{
-		bStopped = !isRun();
-	} else {
 		bool bZeroCrossing = doNextWaveformSegment();
 		if (bZeroCrossing) {
+			bUpDown = !bUpDown;
+			if (bUpDown) {
+				doLedOn();
+				//doSwitchUp();
+			} else {
+				doLedOn();
+				//doSwitchDown();
+			}
 			//doTemperatureAcquisitionStep();
 		}
-		if (bZeroCrossing && !isRun()) {
+		if (bZeroCrossing && !isACWanted()) {
 			// we prefer to stop at zero crossing
-			bStopped = true;
+			setACState(false);
 		}
 	}
-	//	doLedOff();
+	//doPlanSwitch();
+}
+
+void doResetWaveform()
+{ //timer 1 cyclic processing
+	waveformIndex = 0;
+	bPositive = true;
+	bIncreasing = true;
+	doRestartTim2Tim3();
+}
+
+void doStartAC()
+{ // start from idle at middle of waveform (zero crossing)
+	waveformIndex = zeroCrossingWaveformIndex;
+	doResetUpDown();
+	bPositive = true;
+	bIncreasing = false;
+	setACState(true);
+	setACWanted(true);
+	doStartTim1Tim2Tim3AtZeroCrossing();
+	//doPsensePulse();
 }
 
 void setMaxPower(int newMax)

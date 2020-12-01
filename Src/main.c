@@ -190,6 +190,7 @@ int main(void)
 	HAL_ADCEx_MultiModeStart_DMA(&hadc1, (uint32_t*) g_ADCBufferM, ADC_BUFFERM_LENGTH);
 
 	// hrtim for all fast transistor functions
+	//HAL_HRTIM_SimpleBaseStart_IT(&hhrtim1, HRTIM_TIMERINDEX_MASTER);
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_MASTER, HRTIM_COMPAREUNIT_1);
 	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA1 | HRTIM_OUTPUT_TA2);
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_COMPAREUNIT_1);
@@ -225,7 +226,7 @@ int main(void)
 #define DEBUG_LOCK_OUTPUT_SWITCHES 0 // fix the output switches to study high frequency switching
 
 #if 0
-	setOutputSlowSwitch(true);
+	//setOutputSlowSwitch(true);
 	
 	//HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
@@ -236,11 +237,13 @@ int main(void)
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 
 #else
+	HAL_TIM_Base_Start_IT(&htim1);
 	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_1);
 	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_1); 
 	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_2);
 	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_2); 
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
+	//HAL_TIM_Base_Stop_IT(&htim1);
 #endif
 
 	initializeCommand();
@@ -320,19 +323,16 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
   /* ADC1_2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(ADC1_2_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
-  /* TIM1_BRK_TIM15_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(TIM1_BRK_TIM15_IRQn, 1, 0);
-  HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
   /* TIM1_UP_TIM16_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
   /* TIM2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(TIM2_IRQn, 2, 0);
+  HAL_NVIC_SetPriority(TIM2_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   /* TIM3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(TIM3_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(TIM3_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
   /* I2C1_EV_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);

@@ -5,8 +5,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
+	void doStartAC();
+	void doResetWaveform();
 	void doWaveformStep();
 	float get3HD();
 

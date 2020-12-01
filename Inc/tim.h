@@ -47,6 +47,13 @@ void MX_TIM15_Init(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                                             
 /* USER CODE BEGIN Prototypes */
+
+void doSwitchOff();
+void doSwitchUp();
+void doSwitchDown();
+void doPlanSwitch();
+void doStartTim1Tim2Tim3AtZeroCrossing();
+void doRestartTim2Tim3();
 void setFanPWM(unsigned short rT);
 void	 setOutputSlowSwitch(bool bPositive);
 void setChannelDelayTime(int newChannelDelayTime);

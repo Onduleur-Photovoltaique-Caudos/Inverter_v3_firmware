@@ -34,7 +34,9 @@ typedef enum _runState {
 
 volatile RunState runState;
 
-volatile bool stateAC;  // produce AC waveform
+volatile bool stateACWanted;    // want to produce AC waveform
+
+volatile bool stateAC;  // producing AC waveform
 volatile t_breakerState breakerState = eNormal;
 volatile unsigned long long runDelayTimerStartTick;
 
@@ -116,27 +118,42 @@ bool runDelayTimerFinished()
 	return currentTick > (runDelayTimerStartTick + RUN_DELAY_MS * 8);
 }
 
+bool setACWanted(int newACWanted)
+{
+	bool oldACWanted = stateACWanted;
+	stateACWanted = newACWanted != 0;
+	return oldACWanted;
+}
+
 bool setACState(int newACState)
 {
 	bool oldState = stateAC;
 	stateAC = newACState != 0;
 	return oldState;
 }
-static bool lastACstate; // we remember last AC, so we can 
-bool isAC()
+
+bool getACState()
 {
-	if (stateAC) {
-		lastACstate = true;
-		return true;
+	return stateAC;
+}
+
+static bool lastACstate;  // we remember last AC, so we can 
+
+bool isACWanted()
+{
+	return stateACWanted;
+}
+
+void doAC(int newState)
+{
+	if (newState) {
+		doStartAC();
 	} else {
-		if (lastACstate) {
-			setRt(0);
-			lastACstate = false;
-		}
-		return false;
+		setACWanted(false);
 	}
 }
-bool isRun()
+
+	bool isRun()
 {
 //debug mode for lab tests: FORCE_RUN:1
 #define FORCE_RUN 1
@@ -427,6 +444,9 @@ void doEmergencyStop()
 {
 	setRt(0);
 }
+
+volatile bool mustUpdateMAB;
+
 void setRt(int valRt)
 {
 	if (valRt > 92)
@@ -485,8 +505,21 @@ void setRt(int valRt)
 		setCompareA3(valueA3); //lower switch (CMP3 is reset source, CMP2 set source initialized to 200)
 	}
 	_rt = valRt;
-	doUpdateMAB();
+	//mustUpdateMAB = true;
+	doUpdateMAB(); 
 }
+
+
+void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef *hhrtim,
+                                              uint32_t TimerIdx)
+{
+	doSyncSerialPulse();
+	if (mustUpdateMAB) {
+		doUpdateMAB(); 
+		mustUpdateMAB = false;
+	}
+}
+
 
 // command parser
 commandAndValue getCommand() {
@@ -597,7 +630,7 @@ void processCommand(commandAndValue cv)
 		temperaturesDisplay(cv.value);
 		break;
 	case ac:
-		setACState(cv.value);
+		doAC(cv.value);
 		break;
 	case ar:
 		setBreakerRearm(cv.value);

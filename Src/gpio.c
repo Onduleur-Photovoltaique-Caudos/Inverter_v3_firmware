@@ -110,7 +110,7 @@ void doPsenseOff()
 {
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_RESET); 
 }
-void doSensePulse()
+void doPsensePulse()
 {
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_SET); 
 	HAL_GPIO_WritePin(Psense_GPIO_Port, Psense_Pin, GPIO_PIN_RESET); 
@@ -119,6 +119,10 @@ void doPsenseToggle()
 {
 	HAL_GPIO_TogglePin(Psense_GPIO_Port, Psense_Pin); 
 }
+
+//
+// Sync pin: do not use: PA4 not connected
+//
 void doSyncOn()
 {
 	HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET); 

@@ -421,7 +421,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 			resetADCPeriodCounters();
 			bADCPeriodStatsStarted = true;
 		}
-		doSyncSerialOn(); // 45-70 us debug, 15 us release
+		//doSyncSerialOn(); // 45-70 us debug, 15 us release
 		countEOC = 0;
 		g_MeasurementNumber++;
 
@@ -461,7 +461,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 
 //		checkOvercurrent(fM_IIN, fM_IOUT);
 		adjust_225_175(fM_VIN);
-		doSyncSerialOff();
+		//doSyncSerialOff();
 
 		doneADC = true;
 	} // end of adc1 processing
@@ -473,16 +473,36 @@ float getInputVoltage(){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim == &htim3) {
-#if 0
-		doLedOn();
-		doLedOff();
-#else
+	if (htim == &htim1) {
+		doPsenseToggle();
+		//doResetWaveform();
+	} else if (htim == &htim3) {
+
 		Error_Handler();
-#endif
 		//not used doWaveformStep();
 	} else {
 		Error_Handler();
+	}
+}
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim == &htim1) {
+		//
+		// this happens at the start of ADC acquisition
+		// 9us before XferCplt (release) or 15us (debug)
+		//
+		//doLedOn();
+		//doSwitchOff();
+		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
+		{
+			doLedOff();
+		} else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
+		{
+			doLedToggle();
+			doLedToggle();
+		} else {
+		}
 	}
 }
 
@@ -493,7 +513,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 		// this happens at the start of ADC acquisition
 		// 9us before XferCplt (release) or 15us (debug)
 		//
-		doPsenseToggle();
+
 		if(0 && doneADC) {
 			// here some processing if needed
 			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
@@ -502,9 +522,9 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 			return;
 		}
 	} else if (htim == &htim3) {
-
-				//htim3 triggers the waveform step
-				doWaveformStep();
+	
+			//htim3 triggers the waveform step
+			doWaveformStep();
 
 	} else {
 		Error_Handler(); // another timer ?

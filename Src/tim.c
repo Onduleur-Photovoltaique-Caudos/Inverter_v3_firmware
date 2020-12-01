@@ -41,11 +41,11 @@ void MX_TIM1_Init(void)
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 0;
+  htim1.Init.Prescaler = 9;
   htim1.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED3;
-  htim1.Init.Period = 63999;
+  htim1.Init.Period = periodTim1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.RepetitionCounter = 1;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
   {
@@ -61,14 +61,14 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_UPDATE;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM2;
-  sConfigOC.Pulse = 32780;
+  sConfigOC.Pulse = periodTim1/2+1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -79,12 +79,12 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = baseChannel2Time;
+  sConfigOC.Pulse = periodTim1/2;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 30000;
+  sConfigOC.Pulse = zeroSwitchDelay;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_LOW;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
@@ -93,7 +93,7 @@ void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 19;
+  sBreakDeadTimeConfig.DeadTime = 20;
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
@@ -112,13 +112,14 @@ void MX_TIM1_Init(void)
 void MX_TIM2_Init(void)
 {
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 255;
+  htim2.Init.Prescaler = 249;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 20;
+  htim2.Init.Period = 19;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -134,7 +135,13 @@ void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
+  sSlaveConfig.InputTrigger = TIM_TS_ITR0;
+  if (HAL_TIM_SlaveConfigSynchronization(&htim2, &sSlaveConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_OC1REF;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
@@ -247,8 +254,13 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE END TIM1_MspInit 0 */
     /* TIM1 clock enable */
     __HAL_RCC_TIM1_CLK_ENABLE();
-  /* USER CODE BEGIN TIM1_MspInit 1 */
 
+    /* TIM1 interrupt Init */
+    HAL_NVIC_SetPriority(TIM1_CC_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(TIM1_CC_IRQn);
+  /* USER CODE BEGIN TIM1_MspInit 1 */
+	  HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 4, 0);
+	  HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
   /* USER CODE END TIM1_MspInit 1 */
   }
   else if(tim_baseHandle->Instance==TIM2)
@@ -406,15 +418,8 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
     __HAL_RCC_TIM1_CLK_DISABLE();
 
     /* TIM1 interrupt Deinit */
-  /* USER CODE BEGIN TIM1:TIM1_BRK_TIM15_IRQn disable */
-    /**
-    * Uncomment the line below to disable the "TIM1_BRK_TIM15_IRQn" interrupt
-    * Be aware, disabling shared interrupt may affect other IPs
-    */
-    /* HAL_NVIC_DisableIRQ(TIM1_BRK_TIM15_IRQn); */
-  /* USER CODE END TIM1:TIM1_BRK_TIM15_IRQn disable */
-
     HAL_NVIC_DisableIRQ(TIM1_UP_TIM16_IRQn);
+    HAL_NVIC_DisableIRQ(TIM1_CC_IRQn);
   /* USER CODE BEGIN TIM1_MspDeInit 1 */
 
   /* USER CODE END TIM1_MspDeInit 1 */
@@ -454,16 +459,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE END TIM15_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_TIM15_CLK_DISABLE();
-
-    /* TIM15 interrupt Deinit */
-  /* USER CODE BEGIN TIM15:TIM1_BRK_TIM15_IRQn disable */
-    /**
-    * Uncomment the line below to disable the "TIM1_BRK_TIM15_IRQn" interrupt
-    * Be aware, disabling shared interrupt may affect other IPs
-    */
-    /* HAL_NVIC_DisableIRQ(TIM1_BRK_TIM15_IRQn); */
-  /* USER CODE END TIM15:TIM1_BRK_TIM15_IRQn disable */
-
   /* USER CODE BEGIN TIM15_MspDeInit 1 */
 
   /* USER CODE END TIM15_MspDeInit 1 */
@@ -471,6 +466,100 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+
+void doSwitchUp()
+{
+#if 1
+	htim1.Instance->CNT = periodTim1 / 2 - 1000;
+#else
+	htim1.Instance = TIM1;
+	htim1.Init.Prescaler = 9;
+	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim1.Init.Period = 2*1000;
+	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim1.Init.RepetitionCounter = 0;
+	htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
+		Error_Handler();
+	}
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2); 
+#endif
+}
+
+void doSwitchDown()
+{
+#if 1
+	htim1.Instance->CNT = periodTim1 / 2 + 1000;
+#else
+	htim1.Instance = TIM1;
+	htim1.Init.Prescaler = 9;
+	htim1.Init.CounterMode = TIM_COUNTERMODE_DOWN;
+	htim1.Init.Period = 2 * 1000;
+	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim1.Init.RepetitionCounter = 0;
+	htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
+		Error_Handler();
+	}
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2); 
+#endif
+}
+
+
+void doSwitchOff(){
+	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+	HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_2); 
+}
+
+void doPlanSwitch()
+{
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
+}
+
+	void doTim1PeriodChange(int newPeriod)
+{
+	TIM_TypeDef *pTim1 = htim1.Instance;
+	pTim1->CCR1 = newPeriod / 2;
+	pTim1->CCR1 = 1+ newPeriod / 2;
+}
+
+void doRestartTim2Tim3()
+{
+	TIM_TypeDef *pTim2 = htim2.Instance;
+	TIM_TypeDef *pTim3 = htim2.Instance;
+#if 0
+	pTim2->CNT = 0;
+	pTim3->CNT = 0;
+#else
+	pTim2->EGR =  TIM_EGR_UG;
+	pTim3->EGR =  TIM_EGR_UG;
+#endif
+}
+
+void doStartTim1Tim2Tim3AtZeroCrossing()
+{
+	TIM_TypeDef *pTim1 = htim1.Instance;
+	TIM_TypeDef *pTim2 = htim2.Instance;
+	TIM_TypeDef *pTim3 = htim2.Instance;
+	pTim1->CNT = 1000 + periodTim1 / 2;
+	uint32_t  tmpcr1 = pTim1->CR1;
+    tmpcr1 &= ~TIM_CR1_DIR; // make sure we start counting up
+	pTim1->CR1 = tmpcr1;
+	doRestartTim2Tim3();
+}
+
+
 
 void setChannelDelayTime(int newChannelDelayTime)
 {

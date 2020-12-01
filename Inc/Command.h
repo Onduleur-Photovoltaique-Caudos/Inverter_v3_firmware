@@ -20,9 +20,11 @@ void doRunEnable();
 void doRunJustBooted();
 void doRunLowVoltage();
 void doRunNormalVoltage();
-bool doAC(bool newACState);
+bool setACWanted(int newACWanted);
 bool setACState(int newACState);
-bool isAC();
+bool getACState();
+bool isACWanted();
+
 
 void setRt(int val);
 void setZ1(int val);
