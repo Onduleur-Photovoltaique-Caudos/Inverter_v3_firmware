@@ -134,6 +134,23 @@
     <Suggestions>
       <HardwareRegisterFilters />
     </Suggestions>
-    <HardwareRegisters />
+    <HardwareRegisters>
+      <HardwareRegisterRecord>
+        <Name>TIM1.CR1</Name>
+        <State>
+          <IsFavorite>false</IsFavorite>
+          <IsLive>false</IsLive>
+          <LastUsed>132513241800322257</LastUsed>
+        </State>
+      </HardwareRegisterRecord>
+      <HardwareRegisterRecord>
+        <Name>TIM1.CR2</Name>
+        <State>
+          <IsFavorite>false</IsFavorite>
+          <IsLive>false</IsLive>
+          <LastUsed>132515042802176141</LastUsed>
+        </State>
+      </HardwareRegisterRecord>
+    </HardwareRegisters>
   </DebugPreferences>
 </VisualGDBUserPreferences>

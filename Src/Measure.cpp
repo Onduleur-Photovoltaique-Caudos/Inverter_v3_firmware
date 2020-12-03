@@ -474,7 +474,6 @@ float getInputVoltage(){
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim1) {
-		doPsenseToggle();
 		//doResetWaveform();
 	} else if (htim == &htim3) {
 
@@ -494,15 +493,23 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 		//
 		//doLedOn();
 		//doSwitchOff();
+#if 0
+	if (getTimDir(htim) ==0){ // going up
+			doLedOff();
+	} else {
+		doLedToggle();
+		doLedToggle();
+	}
+#else
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
 		{
 			doLedOff();
 		} else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
 		{
-			doLedToggle();
-			doLedToggle();
+			doPsenseOff();
 		} else {
 		}
+		#endif
 	}
 }
 

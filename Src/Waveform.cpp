@@ -47,6 +47,35 @@ volatile short nowPowerAdjust = 100;
 float fnowPowerAdjust = 100;
 
 bool bIncreasing = true;
+
+typedef struct  {
+	uint32_t cnt;
+	uint32_t occurences;
+} tim1Stat;
+
+#define MAX_TIM1_STATS 10
+tim1Stat tim1Stats[MAX_TIM1_STATS];
+unsigned int tim1StatsOverflow;
+void recordTim1()
+{
+	uint32_t cnt = getTim1Cnt();
+	for (int i = 0; i < MAX_TIM1_STATS; i++){
+		if (tim1Stats[i].cnt == cnt) {
+			tim1Stats[i].occurences++;
+			return;
+		}
+	}
+	for (int i = 0; i < MAX_TIM1_STATS; i++) {
+		if (tim1Stats[i].occurences == 0) {
+			tim1Stats[i].occurences++;
+			tim1Stats[i].cnt = cnt;
+			return;
+		}
+	}
+	tim1StatsOverflow++;
+}
+
+
 bool doNextWaveformSegment()
 {
 	bool bZeroCrossing = false;
@@ -67,6 +96,13 @@ bool doNextWaveformSegment()
 	}
 	if (bIncreasing) {
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
+			if (!bPositive) {
+			#if 1
+				setTim1ZeroCrossingOffset(-1250);
+			#else
+				recordTim1();
+			#endif
+			}
 			bIncreasing = false;
 			bPositive = !bPositive;
 			bZeroCrossing = true;
@@ -95,19 +131,19 @@ void doResetUpDown()
 	bUpDown = false;
 }
 
-void doWaveformStep()
+bool doWaveformStep()
 {
-
+	bool bZeroCrossing = false;
 	if(getACState())
 	{
-		bool bZeroCrossing = doNextWaveformSegment();
+		bZeroCrossing = doNextWaveformSegment();
 		if (bZeroCrossing) {
 			bUpDown = !bUpDown;
+			doLedOn();
+			doPsenseOn();
 			if (bUpDown) {
-				doLedOn();
 				//doSwitchUp();
 			} else {
-				doLedOn();
 				//doSwitchDown();
 			}
 			//doTemperatureAcquisitionStep();
@@ -118,6 +154,7 @@ void doWaveformStep()
 		}
 	}
 	//doPlanSwitch();
+	return bZeroCrossing;
 }
 
 void doResetWaveform()

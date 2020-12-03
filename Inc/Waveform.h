@@ -7,7 +7,7 @@ extern "C" {
 #endif
 	void doStartAC();
 	void doResetWaveform();
-	void doWaveformStep();
+	bool doWaveformStep();
 	float get3HD();
 
 	void doAdjustPower();

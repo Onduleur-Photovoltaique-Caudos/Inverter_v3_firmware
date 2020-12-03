@@ -186,9 +186,7 @@ int main(void)
 	// tim2 for ADC DMA
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
-	HAL_ADC_Start(&hadc2);
-	HAL_ADCEx_MultiModeStart_DMA(&hadc1, (uint32_t*) g_ADCBufferM, ADC_BUFFERM_LENGTH);
-
+	// try to synchronize tim2 and hrtim
 	// hrtim for all fast transistor functions
 	//HAL_HRTIM_SimpleBaseStart_IT(&hhrtim1, HRTIM_TIMERINDEX_MASTER);
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_MASTER, HRTIM_COMPAREUNIT_1);
@@ -204,26 +202,12 @@ int main(void)
 	HAL_HRTIM_SimpleOCStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_COMPAREUNIT_1);
 	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TE1);
 
+	// ADC
+	HAL_ADC_Start(&hadc2);
+	HAL_ADCEx_MultiModeStart_DMA(&hadc1, (uint32_t*) g_ADCBufferM, ADC_BUFFERM_LENGTH);
 
 	// Low frequency output switches are connected on timer 1
 
-	#if 0
-	TIM_BreakDeadTimeConfigTypeDef  sBreakDeadTimeConfig;
-	sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
-	sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
-	sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-	sBreakDeadTimeConfig.DeadTime = 10;
-	sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
-	sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
-	sBreakDeadTimeConfig.BreakFilter = 0;
-	sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
-	sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
-	sBreakDeadTimeConfig.Break2Filter = 0;
-	sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-	HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig);
-	#endif
-
-#define DEBUG_LOCK_OUTPUT_SWITCHES 0 // fix the output switches to study high frequency switching
 
 #if 0
 	//setOutputSlowSwitch(true);
@@ -243,7 +227,6 @@ int main(void)
 	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_2);
 	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_2); 
 	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-	//HAL_TIM_Base_Stop_IT(&htim1);
 #endif
 
 	initializeCommand();

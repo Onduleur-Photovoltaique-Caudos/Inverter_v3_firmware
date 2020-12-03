@@ -547,12 +547,24 @@ void doRestartTim2Tim3()
 #endif
 }
 
+
+uint32_t getTim1Cnt()
+{
+	return htim1.Instance->CNT;
+}
+void setTim1ZeroCrossingOffset(uint32_t offset)
+{
+	TIM_TypeDef *pTim1 = htim1.Instance; 
+	pTim1->CNT = offset + periodTim1 / 2;
+}
+
 void doStartTim1Tim2Tim3AtZeroCrossing()
 {
 	TIM_TypeDef *pTim1 = htim1.Instance;
+	pTim1->CNT = 1000 + periodTim1 / 2;	
 	TIM_TypeDef *pTim2 = htim2.Instance;
 	TIM_TypeDef *pTim3 = htim2.Instance;
-	pTim1->CNT = 1000 + periodTim1 / 2;
+
 	uint32_t  tmpcr1 = pTim1->CR1;
     tmpcr1 &= ~TIM_CR1_DIR; // make sure we start counting up
 	pTim1->CR1 = tmpcr1;
