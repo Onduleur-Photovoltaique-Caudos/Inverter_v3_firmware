@@ -183,6 +183,8 @@ int main(void)
 	HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 
+	// tim16 aux timer
+	HAL_TIM_PWM_Start_IT(&htim15, TIM_CHANNEL_1);
 	// tim2 for ADC DMA
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
@@ -306,7 +308,7 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
   /* ADC1_2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(ADC1_2_IRQn, 2, 0);
+  HAL_NVIC_SetPriority(ADC1_2_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
   /* TIM1_UP_TIM16_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 5, 0);
@@ -315,7 +317,7 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(TIM2_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   /* TIM3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(TIM3_IRQn, 4, 0);
+  HAL_NVIC_SetPriority(TIM3_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
   /* I2C1_EV_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);

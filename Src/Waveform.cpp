@@ -35,6 +35,7 @@ int iCosine[] = { 92,
 };
 
 static int zeroCrossingWaveformIndex = WAVEFORM_SEGMENTS / 2 -1;
+static int previousWaveformIndex = 0;
 static int waveformIndex = 0;
 static bool bPositive=true;
 
@@ -75,7 +76,8 @@ void recordTim1()
 	tim1StatsOverflow++;
 }
 
-
+static int nHalfStepCountdown;
+static bool bPendingSetRt;
 bool doNextWaveformSegment()
 {
 	bool bZeroCrossing = false;
@@ -115,16 +117,47 @@ bool doNextWaveformSegment()
 		}
 	}
 
-	int nIndex = waveformIndex;
+	previousWaveformIndex = waveformIndex;
 
 	if (getACState()) {
 		  // AC sine waveform generation
-		setRt(iCosine[nIndex]*getPowerLimit()/100);
+		//setRt((iCosine[previousWaveformIndex] + iCosine[waveformIndex]) / 2*getPowerLimit() / 100);
+		doPsenseOn();
+//		bHalfStep = true;
+	setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+		bPendingSetRt = true;
 	}
 	return bZeroCrossing;
 }
 
+void executeSetRt()
+{
+	if (bPendingSetRt){
+		doPsenseOff();
+		bPendingSetRt = false;
+		//setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+	}
+}
+
+	void doSecondHalfStep()
+{
+	if (nHalfStepCountdown==0) {
+		if (0 && getACState()) {
+			doPsenseOff();
+			setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+		}
+	}
+	if (nHalfStepCountdown > -1) {
+		nHalfStepCountdown--;
+	}
+}
+
 static bool bUpDown;
+
+void doResetHalfStep()
+{
+	nHalfStepCountdown = 0;
+}
 
 void doResetUpDown()
 {
@@ -139,8 +172,8 @@ bool doWaveformStep()
 		bZeroCrossing = doNextWaveformSegment();
 		if (bZeroCrossing) {
 			bUpDown = !bUpDown;
-			doLedOn();
-			doPsenseOn();
+			//doLedOn();
+			//doPsenseOn();
 			if (bUpDown) {
 				//doSwitchUp();
 			} else {
@@ -167,13 +200,15 @@ void doResetWaveform()
 
 void doStartAC()
 { // start from idle at middle of waveform (zero crossing)
+	previousWaveformIndex = zeroCrossingWaveformIndex - 1;
 	waveformIndex = zeroCrossingWaveformIndex;
 	doResetUpDown();
+	doResetHalfStep();
 	bPositive = true;
 	bIncreasing = false;
 	setACState(true);
 	setACWanted(true);
-	doStartTim1Tim2Tim3AtZeroCrossing();
+	doStartTim1AtZeroCrossing();
 	//doPsensePulse();
 }
 

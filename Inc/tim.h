@@ -54,7 +54,7 @@ void doSwitchOff();
 void doSwitchUp();
 void doSwitchDown();
 void doPlanSwitch();
-void doStartTim1Tim2Tim3AtZeroCrossing();
+void doStartTim1AtZeroCrossing();
 void doRestartTim2Tim3();
 void setFanPWM(unsigned short rT);
 void	 setOutputSlowSwitch(bool bPositive);

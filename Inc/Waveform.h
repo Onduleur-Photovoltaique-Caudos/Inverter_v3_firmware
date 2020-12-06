@@ -5,6 +5,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+	void doSecondHalfStep();
+	void executeSetRt();
+	void doResetHalfStep();
 	void doStartAC();
 	void doResetWaveform();
 	bool doWaveformStep();

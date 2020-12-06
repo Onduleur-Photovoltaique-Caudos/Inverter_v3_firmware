@@ -47,12 +47,12 @@ void initializeCommand()
 	setT1(20);
 	setZ1(180);
 	setD1(-20);
-	setV1(140);
+	setV1(170);
 
 	setT2(20);
 	setZ2(180);
 	setD2(-20);
-	setV2(220);
+	setV2(230);
 
 	pSerialOutToConsole = &SerialOutToConsole;
 	pSerialInFromConsole = &SerialInFromConsole;

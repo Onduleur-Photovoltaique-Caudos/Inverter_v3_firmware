@@ -36,7 +36,9 @@ void MX_HRTIM1_Init(void)
 
   hhrtim1.Instance = HRTIM1;
   hhrtim1.Init.HRTIMInterruptResquests = HRTIM_IT_NONE;
-  hhrtim1.Init.SyncOptions = HRTIM_SYNCOPTION_NONE;
+  hhrtim1.Init.SyncOptions = HRTIM_SYNCOPTION_MASTER;
+  hhrtim1.Init.SyncOutputSource = HRTIM_SYNCOUTPUTSOURCE_TIMA_START;
+  hhrtim1.Init.SyncOutputPolarity = HRTIM_SYNCOUTPUTPOLARITY_POSITIVE;
   if (HAL_HRTIM_Init(&hhrtim1) != HAL_OK)
   {
     Error_Handler();
@@ -236,10 +238,6 @@ void HAL_HRTIM_MspInit(HRTIM_HandleTypeDef* hrtimHandle)
   /* USER CODE END HRTIM1_MspInit 0 */
     /* HRTIM1 clock enable */
     __HAL_RCC_HRTIM1_CLK_ENABLE();
-
-    /* HRTIM1 interrupt Init */
-    HAL_NVIC_SetPriority(HRTIM1_Master_IRQn, 1, 0);
-    HAL_NVIC_EnableIRQ(HRTIM1_Master_IRQn);
   /* USER CODE BEGIN HRTIM1_MspInit 1 */
 
   /* USER CODE END HRTIM1_MspInit 1 */
@@ -313,9 +311,6 @@ void HAL_HRTIM_MspDeInit(HRTIM_HandleTypeDef* hrtimHandle)
   /* USER CODE END HRTIM1_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_HRTIM1_CLK_DISABLE();
-
-    /* HRTIM1 interrupt Deinit */
-    HAL_NVIC_DisableIRQ(HRTIM1_Master_IRQn);
   /* USER CODE BEGIN HRTIM1_MspDeInit 1 */
 
   /* USER CODE END HRTIM1_MspDeInit 1 */

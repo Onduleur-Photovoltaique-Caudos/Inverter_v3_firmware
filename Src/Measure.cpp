@@ -404,67 +404,74 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		countEOC++;
 		return;
 	}
-	if (adcHandle == &hadc1) { // 3 microseconds in optimized mode 8us in debug
-		if (bADCPeriodStatsStarted) {
+	if (adcHandle == &hadc1) {
+		doSyncSerialOn();  // 45-70 us debug, 15 us release
+		 // 3 microseconds in optimized mode 8us in debug
+		if(bADCPeriodStatsStarted)
+		{
 			int ADCPeriod = get_us_DWT(1);
 			start_us_DWT(1);
 			moyADCPeriod += ADCPeriod;
 			countADCPeriod++;
-			if (minADCPeriod > ADCPeriod){
+			if (minADCPeriod > ADCPeriod) {
 				minADCPeriod = ADCPeriod;
 			}
 			if (maxADCPeriod < ADCPeriod) {
 				maxADCPeriod = ADCPeriod;
 			}
-		} else {
+		} else
+		{
 			start_us_DWT(1);
 			resetADCPeriodCounters();
 			bADCPeriodStatsStarted = true;
 		}
-		//doSyncSerialOn(); // 45-70 us debug, 15 us release
 		countEOC = 0;
 		g_MeasurementNumber++;
 
 		VALIDATE(*pM_VIN, *oM_VIN);
-		fM_VIN = (*oM_VIN) *mvFactor1 * mvCorrectionFactor; 		// test at P21 -- ok pas de bruit
+		fM_VIN = (*oM_VIN) *mvFactor1 * mvCorrectionFactor;  		// test at P21 -- ok pas de bruit
 		VALIDATE(*pM_V225, *oM_V225);
-		fM_V225 = (*oM_V225) *mvFactor2 * mvCorrectionFactor; 	// test at P3  -- ok pas de bruit
+		fM_V225 = (*oM_V225) *mvFactor2 * mvCorrectionFactor;  	// test at P3  -- ok pas de bruit
 		VALIDATE(*pM_IHFL, *oM_IHFL);
-		fM_IHFL = ((*oM_IHFL) - iOffset)  *iDivider * mvCorrectionFactor; // test at U11 pin 1 -- error lit sur VOUT1
+		fM_IHFL = ((*oM_IHFL) - iOffset)  *iDivider * mvCorrectionFactor;  // test at U11 pin 1 -- error lit sur VOUT1
 		VALIDATE(*pM_VOUT1, *oM_VOUT1);
-		fM_VOUT1 = (*oM_VOUT1) *mvFactor1;			// ADC1 IN11 test at P20 -- OK
+		fM_VOUT1 = (*oM_VOUT1) *mvFactor1; 			// ADC1 IN11 test at P20 -- OK
 		VALIDATE(*pM_VOUT2, *oM_VOUT2);
-		fM_VOUT2 = (*oM_VOUT2) *mvFactor1;			// test at P18 -- OK
+		fM_VOUT2 = (*oM_VOUT2) *mvFactor1; 			// test at P18 -- OK
 		VALIDATE(*pM_Temp, *oM_Temp);
 		fM_Temp = ((*TEMP30_CAL_ADDR) - (*oM_Temp)* mvCorrectionFactor) * 80.0f / ((*TEMP30_CAL_ADDR) - (*TEMP110_CAL_ADDR)) + 30; 
 		; 
 		VALIDATE(*pM_Vref, *oM_Vref);
 		fM_Vref = (*oM_Vref) * mvFactor0;
 		mvCorrectionFactor =  0.01f*(* VREFINT_CAL_ADDR) / (*oM_Vref) + 0.99f * mvCorrectionFactor;
-		// ADC2
+		if (mvCorrectionFactor > 2.0 || mvCorrectionFactor<0.5) {
+			mvCorrectionFactor = 1.13;
+		}
 		VALIDATE(*pM_V175, *oM_V175);
-		fM_V175 = (*oM_V175) *mvFactor2 * mvCorrectionFactor; 			// test at P4  -- ok 
+		fM_V175 = (*oM_V175) *mvFactor2 * mvCorrectionFactor;  			// test at P4  -- ok 
 		//doStatsMeasurement(fM_V175);
 		VALIDATE(*pM_IOUT, *oM_IOUT);
-		fM_IOUT = ((*oM_IOUT)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;      	// test at P13 pin2 (range 5V) -- bruite error, pas connecte essayer R43 R44
+		fM_IOUT = ((*oM_IOUT)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;       	// test at P13 pin2 (range 5V) -- bruite error, pas connecte essayer R43 R44
 		doRecordMeasurement(fM_IOUT);
 		VALIDATE(*pM_IH1, *oM_IH1);
-		fM_IH1 = ((*oM_IH1) - iOffset) *iDivider* mvCorrectionFactor;    		// test at U20 pin1 -- error lit sur IOUT
+		fM_IH1 = ((*oM_IH1) - iOffset) *iDivider* mvCorrectionFactor;     		// test at U20 pin1 -- error lit sur IOUT
 		VALIDATE(*pM_IH2, *oM_IH2);
-		fM_IH2 = ((*oM_IH2) - iOffset) *iDivider* mvCorrectionFactor;    		// test at U17 pin1 -- OK
+		fM_IH2 = ((*oM_IH2) - iOffset) *iDivider* mvCorrectionFactor;     		// test at U17 pin1 -- OK
 		VALIDATE(*pM_IIN, *oM_IIN);
-		fM_IIN = ((*oM_IIN)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;    	// test at P16 pin2 range 5V --OK
+		fM_IIN = ((*oM_IIN)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor1;     	// test at P16 pin2 range 5V --OK
 		VALIDATE(*pM_I175, *oM_I175);
-		fM_I175 = ((*oM_I175)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;     	// test at P10 pin2 range 5V --OK
+		fM_I175 = ((*oM_I175)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;      	// test at P10 pin2 range 5V --OK
 		VALIDATE(*pM_I225, *oM_I225);
-		fM_I225 = ((*oM_I225)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;     	// test at P9 pin2 range 5V -- OK
+		fM_I225 = ((*oM_I225)*mvFactor0  * mvCorrectionFactor * iDivider - iOffset) * iFactor2;      	// test at P9 pin2 range 5V -- OK
 
 //		checkOvercurrent(fM_IIN, fM_IOUT);
 		adjust_225_175(fM_VIN);
-		//doSyncSerialOff();
-
+		doSyncSerialOff();
+		doSecondHalfStep();
 		doneADC = true;
-	} // end of adc1 processing
+	} else {// end of adc1 processing
+		Error_Handler();
+	}
 }
 
 float getInputVoltage(){
@@ -486,7 +493,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim == &htim1) {
+	if (htim == &htim15) {
+		executeSetRt();
+	} else if (htim == &htim1) {
 		//
 		// this happens at the start of ADC acquisition
 		// 9us before XferCplt (release) or 15us (debug)
@@ -503,10 +512,10 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 #else
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
 		{
-			doLedOff();
+			//doLedOff();
 		} else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
 		{
-			doPsenseOff();
+			//doPsenseOff();
 		} else {
 		}
 		#endif
@@ -515,13 +524,16 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim == &htim1) {
+	if (htim == &htim15) {
+		executeSetRt();
+	} else if(htim == &htim1){
 		//
 		// this happens at the start of ADC acquisition
 		// 9us before XferCplt (release) or 15us (debug)
 		//
 
-		if(0 && doneADC) {
+		if(0 && doneADC)
+		{
 			// here some processing if needed
 			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
 			delay_us_DWT(1);
@@ -530,10 +542,11 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 	} else if (htim == &htim3) {
 	
-			//htim3 triggers the waveform step
-			doWaveformStep();
-
-	} else {
+		//htim3 triggers the waveform step
+		doWaveformStep();
+	} else if (htim == &htim2){
+// not used
+	} else  {
 		Error_Handler(); // another timer ?
 	}
 }
