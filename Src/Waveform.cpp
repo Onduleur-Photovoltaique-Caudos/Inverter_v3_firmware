@@ -7,6 +7,15 @@
 #include "Temperature.h"
 #include <algorithm> 
 
+#if 0
+#define WAVEFORM_SEGMENTS 4
+int iCosine[] = { 
+	90,
+	80,
+	70
+};
+#else
+
 // tim15 period 15, segments 32
 #define WAVEFORM_SEGMENTS 32
 /* sine wave synthesis:
@@ -33,6 +42,7 @@ int iCosine[] = { 92,
 9,
 0
 };
+#endif
 
 static int zeroCrossingWaveformIndex = WAVEFORM_SEGMENTS / 2 -1;
 static int previousWaveformIndex = 0;
@@ -40,7 +50,7 @@ static int waveformIndex = 0;
 static bool bPositive=true;
 
 static volatile bool bStopped = true;
-float fVH3I, fVH3D, fVH3M;
+static volatile float fVH3I, fVH3D, fVH3M;
 
 volatile bool bLimitPower;
 volatile short powerLimit;
@@ -82,18 +92,19 @@ bool doNextWaveformSegment()
 {
 	bool bZeroCrossing = false;
 
+	previousWaveformIndex = waveformIndex;
 	if (bIncreasing) {
 		waveformIndex++;
 	} else {
 		waveformIndex--;
 	}
 
-	if (waveformIndex == (WAVEFORM_SEGMENTS / 6)) {
+	if (previousWaveformIndex == (WAVEFORM_SEGMENTS * 10 / 32)) {
 		 // measure harmonic 3 of input voltage here
 		 if (bIncreasing){
-			 fVH3I = fM_VIN;
+			 fVH3I = fmax(fM_VOUT1, fM_VOUT2);
 		} else {
-			fVH3D = fM_VIN;
+			fVH3D = fmax(fM_VOUT1, fM_VOUT2);
 		}
 	}
 	if (bIncreasing) {
@@ -110,39 +121,38 @@ bool doNextWaveformSegment()
 			bZeroCrossing = true;
 		}
 	} else {
-		if (waveformIndex <= 0) {
+		if (previousWaveformIndex <= 0) {
 			bIncreasing = true;
 			// measure peak of input voltage here
-			fVH3M = fM_VIN;
+			fVH3M = fmax(fM_VOUT1, fM_VOUT2);
 		}
 	}
 
-	previousWaveformIndex = waveformIndex;
-
 	if (getACState()) {
 		  // AC sine waveform generation
-		//setRt((iCosine[previousWaveformIndex] + iCosine[waveformIndex]) / 2*getPowerLimit() / 100);
+		//setRt((iCosine[previousWaveformIndex] + iCosine[waveformIndex]) *60/100 *getPowerLimit() / 100);
 		doPsenseOn();
-//		bHalfStep = true;
-	setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+		nHalfStepCountdown = -1;
+		setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
 		bPendingSetRt = true;
 	}
 	return bZeroCrossing;
 }
+
 
 void executeSetRt()
 {
 	if (bPendingSetRt){
 		doPsenseOff();
 		bPendingSetRt = false;
-		//setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+		setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
 	}
 }
 
-	void doSecondHalfStep()
+void doSecondHalfStep()
 {
 	if (nHalfStepCountdown==0) {
-		if (0 && getACState()) {
+		if (getACState()) {
 			doPsenseOff();
 			setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
 		}
@@ -151,6 +161,7 @@ void executeSetRt()
 		nHalfStepCountdown--;
 	}
 }
+
 
 static bool bUpDown;
 
@@ -172,6 +183,7 @@ bool doWaveformStep()
 		bZeroCrossing = doNextWaveformSegment();
 		if (bZeroCrossing) {
 			bUpDown = !bUpDown;
+			doSyncSerialToggle();
 			//doLedOn();
 			//doPsenseOn();
 			if (bUpDown) {
@@ -200,8 +212,13 @@ void doResetWaveform()
 
 void doStartAC()
 { // start from idle at middle of waveform (zero crossing)
+#if 0
+	previousWaveformIndex = 0;
+	waveformIndex = 1;
+#else
 	previousWaveformIndex = zeroCrossingWaveformIndex - 1;
 	waveformIndex = zeroCrossingWaveformIndex;
+#endif
 	doResetUpDown();
 	doResetHalfStep();
 	bPositive = true;
@@ -233,7 +250,7 @@ int getPowerLimit()
 	return nowPowerAdjust;
 }
 
-float harmonicDistortion;
+static volatile float harmonicDistortion;
 #define ADJUSTMENT_TIME_CONSTANT 10
 #define TARGET_HD 0.05
 
@@ -242,7 +259,10 @@ float get3HD(){
 }
 static float compute3HD() // third harmonic distortion
 {
-	float hd = fabs((fVH3I + fVH3D - fVH3M) / fVH3M);
+	float hd=0.0f;
+	if (fVH3M > 10) {
+		hd= fabs((fVH3I + fVH3D - fVH3M) / fVH3M);
+	}
 	return hd;
 }
 

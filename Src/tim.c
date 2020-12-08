@@ -248,7 +248,7 @@ void MX_TIM15_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
-  sConfigOC.Pulse = 4;
+  sConfigOC.Pulse = 8;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -685,82 +685,7 @@ GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
 HAL_GPIO_Init(Led_GPIO_Port, &GPIO_InitStruct);
 }
 
-void setH1_HON(bool on) // TIM1_CH1N
-{
-	TIM_TypeDef *TIMx = htim1.Instance;
-	uint32_t tmpccer;
 
-	/* Get the TIMx CCER register value */
-	tmpccer = TIMx->CCER;
-
-	/* Reset the Output Polarity level */
-	tmpccer &= ~TIM_CCER_CC1NP;
-	/* Set the Output Compare Polarity */
-	if (on)
-		tmpccer |= (TIM_OCNPOLARITY_LOW); 
-	else
-		tmpccer |= (TIM_OCNPOLARITY_HIGH); 
-
-	/* Write to TIMx CCER */
-	TIMx->CCER = tmpccer;
-}
-void setH2_HON(bool on) // TIM1_CH2
-{
-	TIM_TypeDef *TIMx = htim1.Instance;
-	uint32_t tmpccer;
-
-	/* Get the TIMx CCER register value */
-	tmpccer = TIMx->CCER;
-
-	/* Reset the Output Polarity level */
-	tmpccer &= ~TIM_CCER_CC2P;
-	/* Set the Output Compare Polarity */
-	if (on)
-		tmpccer |= (TIM_OCPOLARITY_LOW  << 4U); 
-	else
-		tmpccer |= (TIM_OCPOLARITY_HIGH  << 4U);
-
-	/* Write to TIMx CCER */
-	TIMx->CCER = tmpccer;
-}
-void setH1_LON(bool on) // TIM1_CH1
-{
-	TIM_TypeDef *TIMx = htim1.Instance;
-	uint32_t tmpccer;
-
-	/* Get the TIMx CCER register value */
-	tmpccer = TIMx->CCER;
-
-	/* Reset the Output Polarity level */
-	tmpccer &= ~TIM_CCER_CC1P;
-	/* Set the Output Compare Polarity */
-	if (on)
-		tmpccer |= TIM_OCPOLARITY_LOW; 
-	else
-		tmpccer |= TIM_OCPOLARITY_HIGH; 
-
-	/* Write to TIMx CCER */
-	TIMx->CCER = tmpccer;
-}
-void setH2_LON(bool on) // TIM1_CH2N
-{
-	TIM_TypeDef *TIMx = htim1.Instance;
-	uint32_t tmpccer;
-
-	/* Get the TIMx CCER register value */
-	tmpccer = TIMx->CCER;
-
-	/* Reset the Output Polarity level */
-	tmpccer &= ~TIM_CCER_CC2NP;
-	/* Set the Output Compare Polarity */
-	if (on)
-		tmpccer |= (TIM_OCNPOLARITY_LOW  << 4U);
-	else
-		tmpccer |= (TIM_OCNPOLARITY_HIGH << 4U); 
-
-	/* Write to TIMx CCER */
-	TIMx->CCER = tmpccer;
-}
 void setOutputCHAll(bool bActive)
 {
 	uint32_t tmpccmrx;
@@ -890,8 +815,8 @@ void setOutputSlowSwitch(bool bPositive){
 		HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
 		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
 		bInitialized = true;
+		setOutputCHAll(bPositive);
 	}
-
 }
 /* USER CODE END 1 */
 

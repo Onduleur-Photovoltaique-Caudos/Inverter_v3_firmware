@@ -405,7 +405,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 		return;
 	}
 	if (adcHandle == &hadc1) {
-		doSyncSerialOn();  // 45-70 us debug, 15 us release
 		 // 3 microseconds in optimized mode 8us in debug
 		if(bADCPeriodStatsStarted)
 		{
@@ -466,7 +465,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 
 //		checkOvercurrent(fM_IIN, fM_IOUT);
 		adjust_225_175(fM_VIN);
-		doSyncSerialOff();
 		doSecondHalfStep();
 		doneADC = true;
 	} else {// end of adc1 processing
@@ -491,41 +489,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 }
 
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
-{
-	if (htim == &htim15) {
-		executeSetRt();
-	} else if (htim == &htim1) {
-		//
-		// this happens at the start of ADC acquisition
-		// 9us before XferCplt (release) or 15us (debug)
-		//
-		//doLedOn();
-		//doSwitchOff();
-#if 0
-	if (getTimDir(htim) ==0){ // going up
-			doLedOff();
-	} else {
-		doLedToggle();
-		doLedToggle();
-	}
-#else
-		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
-		{
-			//doLedOff();
-		} else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
-		{
-			//doPsenseOff();
-		} else {
-		}
-		#endif
-	}
-}
 
-void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) // same as HAL_TIM_PWM_PulseFinishedCallback
 {
 	if (htim == &htim15) {
-		executeSetRt();
+		//executeSetRt();
 	} else if(htim == &htim1){
 		//
 		// this happens at the start of ADC acquisition

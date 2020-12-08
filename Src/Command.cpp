@@ -513,7 +513,6 @@ void setRt(int valRt)
 void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef *hhrtim,
                                               uint32_t TimerIdx)
 {
-	doSyncSerialPulse();
 	if (mustUpdateMAB) {
 		doUpdateMAB(); 
 		mustUpdateMAB = false;

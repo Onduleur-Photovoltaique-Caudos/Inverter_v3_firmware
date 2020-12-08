@@ -211,25 +211,18 @@ int main(void)
 	// Low frequency output switches are connected on timer 1
 
 
-#if 0
-	//setOutputSlowSwitch(true);
-	
-	//HAL_TIM_Base_Start(&htim1);
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1); 
-	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_1); 
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_2);
-	HAL_TIMEx_OCN_Start(&htim1, TIM_CHANNEL_2); 
-	//fan PWM
-	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-
+#if 1
+	setOutputSlowSwitch(true);
 #else
 	HAL_TIM_Base_Start_IT(&htim1);
 	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_1);
 	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_1); 
 	HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_2);
 	HAL_TIMEx_PWMN_Start_IT(&htim1, TIM_CHANNEL_2); 
-	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 #endif
+
+	//fan PWM
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 
 	initializeCommand();
 
