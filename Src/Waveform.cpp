@@ -19,7 +19,7 @@ int iCosine[] = {
 // tim15 period 15, segments 32
 #define WAVEFORM_SEGMENTS 32
 /* sine wave synthesis:
- * WAVEFORM_SEGMENTS is noted N below is the number of segments in half a period
+ * WAVEFORM_SEGMENTS is noted N and is the number of segments in half a period
  * the clock interrupts 2N times by half period
  * the table has N/2+1 entries and is generated in excel with the formula
  * =ROUND(COS(i * PI / N)*92,0)  where i is the table index 92 and 4 being min and max amplitudes
@@ -111,7 +111,7 @@ bool doNextWaveformSegment()
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
 			if (!bPositive) {
 			#if 1
-				setTim1ZeroCrossingOffset(-1250);
+				setTim1ZeroCrossingOffset(-100);
 			#else
 				recordTim1();
 			#endif
@@ -122,9 +122,11 @@ bool doNextWaveformSegment()
 		}
 	} else {
 		if (previousWaveformIndex <= 0) {
-			bIncreasing = true;
 			// measure peak of input voltage here
 			fVH3M = fmax(fM_VOUT1, fM_VOUT2);
+		}
+		if (waveformIndex <= 0) {
+			bIncreasing = true; 
 		}
 	}
 
@@ -196,6 +198,7 @@ bool doWaveformStep()
 		if (bZeroCrossing && !isACWanted()) {
 			// we prefer to stop at zero crossing
 			setACState(false);
+			setRt(10);
 		}
 	}
 	//doPlanSwitch();
@@ -269,7 +272,7 @@ static float compute3HD() // third harmonic distortion
 
 static void adjustPower(float adjustment)
 {
-	fnowPowerAdjust = std::max(100.0f, fnowPowerAdjust*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT));
+	fnowPowerAdjust = std::min(100.0f, fnowPowerAdjust*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT));
 	nowPowerAdjust = fnowPowerAdjust;
 	if (bLimitPower && nowPowerAdjust > powerLimit) {
 		nowPowerAdjust = powerLimit;

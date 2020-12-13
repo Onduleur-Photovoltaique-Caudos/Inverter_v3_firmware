@@ -211,7 +211,7 @@ int main(void)
 	// Low frequency output switches are connected on timer 1
 
 
-#if 1
+#if 0
 	setOutputSlowSwitch(true);
 #else
 	HAL_TIM_Base_Start_IT(&htim1);

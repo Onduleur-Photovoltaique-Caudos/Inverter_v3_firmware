@@ -65,7 +65,7 @@ void doLoop(void){
 
 		HAL_Delay(10);
 		count++;
-		doAdjustPower();
+		//doAdjustPower();
 		doAdjustFanSpeed();
 		processMessageQueue();
 		//doTemperatureAcquisitionStep();

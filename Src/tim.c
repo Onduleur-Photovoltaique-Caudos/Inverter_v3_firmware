@@ -248,7 +248,7 @@ void MX_TIM15_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
-  sConfigOC.Pulse = 8;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -614,7 +614,7 @@ void setTim1ZeroCrossingOffset(uint32_t offset)
 void doStartTim1AtZeroCrossing()
 {
 	TIM_TypeDef *pTim1 = htim1.Instance;
-	pTim1->CNT = 1000 + periodTim1 / 2;	
+	pTim1->CNT = -600 + periodTim1 / 2;	
 
 	uint32_t  tmpcr1 = pTim1->CR1;
     tmpcr1 &= ~TIM_CR1_DIR; // make sure we start counting up
