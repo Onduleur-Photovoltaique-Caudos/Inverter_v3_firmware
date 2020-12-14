@@ -44,7 +44,7 @@ int iCosine[] = { 92,
 };
 #endif
 
-static int zeroCrossingWaveformIndex = WAVEFORM_SEGMENTS / 2 -1;
+static int zeroCrossingWaveformIndex = WAVEFORM_SEGMENTS / 2 ;
 static int previousWaveformIndex = 0;
 static int waveformIndex = 0;
 static bool bPositive=true;
@@ -107,10 +107,14 @@ bool doNextWaveformSegment()
 			fVH3D = fmax(fM_VOUT1, fM_VOUT2);
 		}
 	}
+	if (previousWaveformIndex <= 0) {
+		// measure peak of input voltage here
+		fVH3M = fmax(fM_VOUT1, fM_VOUT2);
+	}
 	if (bIncreasing) {
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
 			if (!bPositive) {
-			#if 1
+			#if 0
 				setTim1ZeroCrossingOffset(-100);
 			#else
 				recordTim1();
@@ -121,10 +125,6 @@ bool doNextWaveformSegment()
 			bZeroCrossing = true;
 		}
 	} else {
-		if (previousWaveformIndex <= 0) {
-			// measure peak of input voltage here
-			fVH3M = fmax(fM_VOUT1, fM_VOUT2);
-		}
 		if (waveformIndex <= 0) {
 			bIncreasing = true; 
 		}
@@ -215,13 +215,8 @@ void doResetWaveform()
 
 void doStartAC()
 { // start from idle at middle of waveform (zero crossing)
-#if 0
-	previousWaveformIndex = 0;
-	waveformIndex = 1;
-#else
-	previousWaveformIndex = zeroCrossingWaveformIndex - 1;
 	waveformIndex = zeroCrossingWaveformIndex;
-#endif
+
 	doResetUpDown();
 	doResetHalfStep();
 	bPositive = true;
@@ -264,7 +259,7 @@ static float compute3HD() // third harmonic distortion
 {
 	float hd=0.0f;
 	if (fVH3M > 10) {
-		hd= fabs((fVH3I + fVH3D - fVH3M) / fVH3M);
+		hd= fmax(0.0f,((fVH3I + fVH3D)*0.8f - fVH3M ) / fVH3M);
 	}
 	return hd;
 }
