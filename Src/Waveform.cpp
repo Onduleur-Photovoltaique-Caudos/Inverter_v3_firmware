@@ -249,8 +249,8 @@ int getPowerLimit()
 }
 
 static volatile float harmonicDistortion;
-#define ADJUSTMENT_TIME_CONSTANT 10
-#define TARGET_HD 0.05
+#define ADJUSTMENT_TIME_CONSTANT 5.0f
+#define TARGET_HD 0.1f
 
 float get3HD(){
 	return harmonicDistortion;
@@ -258,8 +258,9 @@ float get3HD(){
 static float compute3HD() // third harmonic distortion
 {
 	float hd=0.0f;
-	if (fVH3M > 10) {
-		hd= fmax(0.0f,((fVH3I + fVH3D)*0.8f - fVH3M ) / fVH3M);
+	if (fVH3M > 10000) {
+//		hd= fmax(0.0f,((fVH3I + fVH3D)*0.92f - fVH3M ) / fVH3M);
+		hd =  100.0f * ((fVH3I + fVH3D) * 0.92f - fVH3M) / fVH3M  / fVH3M;
 	}
 	return hd;
 }
@@ -267,7 +268,7 @@ static float compute3HD() // third harmonic distortion
 
 static void adjustPower(float adjustment)
 {
-	fnowPowerAdjust = std::min(100.0f, fnowPowerAdjust*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT));
+	fnowPowerAdjust = std::max(10.0f,std::min(100.0f, fnowPowerAdjust*(1 + adjustment / ADJUSTMENT_TIME_CONSTANT)));
 	nowPowerAdjust = fnowPowerAdjust;
 	if (bLimitPower && nowPowerAdjust > powerLimit) {
 		nowPowerAdjust = powerLimit;
@@ -275,8 +276,10 @@ static void adjustPower(float adjustment)
 }
 
 void doAdjustPower(){	
+	static float integral = 0.0f;
 	harmonicDistortion=compute3HD();
-	adjustPower(TARGET_HD - harmonicDistortion);
+	integral += harmonicDistortion; 
+	adjustPower(TARGET_HD - harmonicDistortion - integral*0.1f);
 }
 
 static bool bFanSpeedIsDefined;
