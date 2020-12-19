@@ -99,7 +99,7 @@ bool doNextWaveformSegment()
 		waveformIndex--;
 	}
 
-	if (previousWaveformIndex == (WAVEFORM_SEGMENTS * 10 / 32)) {
+	if (previousWaveformIndex == (WAVEFORM_SEGMENTS * 10	 / 32)) {
 		 // measure harmonic 3 of input voltage here
 		 if (bIncreasing){
 			 fVH3I = fmax(fM_VOUT1, fM_VOUT2);
@@ -188,11 +188,6 @@ bool doWaveformStep()
 			doSyncSerialToggle();
 			//doLedOn();
 			//doPsenseOn();
-			if (bUpDown) {
-				//doSwitchUp();
-			} else {
-				//doSwitchDown();
-			}
 			//doTemperatureAcquisitionStep();
 		}
 		if (bZeroCrossing && !isACWanted()) {
@@ -249,8 +244,8 @@ int getPowerLimit()
 }
 
 static volatile float harmonicDistortion;
-#define ADJUSTMENT_TIME_CONSTANT 5.0f
-#define TARGET_HD 0.1f
+#define ADJUSTMENT_TIME_CONSTANT 2.0f
+#define TARGET_HD 0.10f
 
 float get3HD(){
 	return harmonicDistortion;
@@ -259,8 +254,7 @@ static float compute3HD() // third harmonic distortion
 {
 	float hd=0.0f;
 	if (fVH3M > 10000) {
-//		hd= fmax(0.0f,((fVH3I + fVH3D)*0.92f - fVH3M ) / fVH3M);
-		hd =  100.0f * ((fVH3I + fVH3D) * 0.92f - fVH3M) / fVH3M  / fVH3M;
+		hd =  0.42f + ((fVH3I + fVH3D) /2.0f - fVH3M) / fVH3M;
 	}
 	return hd;
 }
@@ -275,11 +269,10 @@ static void adjustPower(float adjustment)
 	}
 }
 
+volatile static float error_integral = 0.0f;
 void doAdjustPower(){	
-	static float integral = 0.0f;
 	harmonicDistortion=compute3HD();
-	integral += harmonicDistortion; 
-	adjustPower(TARGET_HD - harmonicDistortion - integral*0.1f);
+	adjustPower(TARGET_HD - harmonicDistortion + error_integral * 0.1f);
 }
 
 static bool bFanSpeedIsDefined;
