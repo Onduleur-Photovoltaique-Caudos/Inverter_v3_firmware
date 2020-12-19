@@ -269,7 +269,6 @@ static void adjustPower(float adjustment)
 	}
 }
 
-volatile static float error_integral = 0.0f;
 void doAdjustPower(){	
 	harmonicDistortion=compute3HD();
 	adjustPower(TARGET_HD - harmonicDistortion + error_integral * 0.1f);
