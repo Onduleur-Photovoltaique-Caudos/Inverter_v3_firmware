@@ -13,20 +13,24 @@ SerialOutput * SerialOutput::channel_2 = NULL;
 
 void SerialErrorHandler(int nReason,int nSecondary=0)
 {
+	doDisableSwitches();
 	doLedOff();
-	delay_us_DWT(2000000);
-	for (int i=0;i< nReason;i++){
-		doLedOn();
-		delay_us_DWT(200000);
-		doLedOff();
-		delay_us_DWT(500000);
+	while (true) {
+		delay_us_DWT(2000000);
+		for (int i=0;i< nReason;i++){
+			doLedOn();
+			delay_us_DWT(200000);
+			doLedOff();
+			delay_us_DWT(500000);
+			}
+		delay_us_DWT(2000000);
+		for (int i = 0; i < nSecondary; i++) {
+			doLedOn();
+			delay_us_DWT(200000);
+			doLedOff();
+			delay_us_DWT(500000);
 		}
-	delay_us_DWT(2000000);
-	for (int i = 0; i < nSecondary; i++) {
-		doLedOn();
-		delay_us_DWT(200000);
-		doLedOff();
-		delay_us_DWT(500000);
+		delay_us_DWT(2000000);
 	}
 	Error_Handler();
 }
@@ -62,7 +66,7 @@ char * SerialInput::fgets(char * str, int size)
 
 char *  SerialInput::fgetsNonBlocking(char * str, int size)
 {
-	if (! bInitialized){
+	if (! bEnabled){
 		return NULL;
 	}
 	while (!eol && ((driverBufferNextChar - driverBuffer) < size)) {
@@ -89,7 +93,7 @@ cleanup:
 
 void SerialInput::doInputIT(void)
 {
-	if (!bInitialized) {
+	if (!bEnabled) {
 		return;
 	}
 	char c = inputBuffer[0];
@@ -121,7 +125,7 @@ void SerialInput::doInputIT(void)
 	}
 	HAL_StatusTypeDef status = HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1);
 	if (status != HAL_OK) {
-		bInitialized = false;
+		bEnabled = false;
 		//SerialErrorHandler(2);
 	}
 }
@@ -207,5 +211,13 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 //	HAL_UART_ERROR_DMA       = 0x10,    /*!< DMA transfer error  */
 //	HAL_UART_ERROR_BUSY      = 0x20     /*!< Busy Error          */
 	nLastError = huart->ErrorCode;
-//	SerialErrorHandler(6, nLastError);
+	if (huart == &huart2) {
+		SerialInput * serialObject;
+		serialObject  = SerialInput::channel_2;
+#define ERROR_TEXT "\r\nSerial input error: disabled\r\n"
+		HAL_UART_Transmit(huart, (uint8_t*)ERROR_TEXT, strlen(ERROR_TEXT), 1000);
+		serialObject->disable();
+	} else {
+		SerialErrorHandler(6, nLastError);
+	}
 }

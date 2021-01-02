@@ -38,7 +38,8 @@
 void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+	 void doEnableSwitches();
+	 void doDisableSwitches();
 	 void doPsenseOn(); 
 	 void doPsenseOff(); 
 	 void doPsensePulse(); 

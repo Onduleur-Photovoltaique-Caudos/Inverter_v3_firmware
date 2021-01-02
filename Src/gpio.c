@@ -87,6 +87,17 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+
+void doEnableSwitches()
+{
+	HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_RESET);  // enable everything
+}
+
+void doDisableSwitches()
+{
+	HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_SET);   // enable everything
+}
+
 static bool bLedIsGpio;
 void setLedPinGpio()
 {  /*Configure GPIO pin : Led */

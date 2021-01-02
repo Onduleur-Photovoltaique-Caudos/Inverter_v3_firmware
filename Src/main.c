@@ -226,7 +226,7 @@ int main(void)
 
 	initializeCommand();
 
-	HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_RESET); // enable everything
+	doEnableSwitches();
 
   /* USER CODE END 2 */
 
@@ -347,6 +347,7 @@ void _sbrk()
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
+	doDisableSwitches();
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {

@@ -38,12 +38,16 @@ class SerialInput {
 public:
 	SerialInput(UART_HandleTypeDef * pHandle, char * buffer, unsigned int size);
 	void initialize(SerialOutput * echoChannel=NULL) {
-		if (HAL_UART_Receive(pHandle, (uint8_t *)inputBuffer, 1, 1000) != HAL_OK) {
+		if (HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1) != HAL_OK) {
 			nLastError = pHandle->ErrorCode;
-			bInitialized = false;
+			bEnabled = false;
 		}
-		bInitialized = true;
+		bEnabled = true;
 		echo = echoChannel;
+	}
+	void disable()
+	{
+		bEnabled = false;
 	}
 	void doInputIT();
 	char * fgets(char * str, int size);
@@ -53,7 +57,7 @@ public:
 	static SerialInput * channel_2;
 	static SerialInput * channel_3;
 
-	bool bInitialized;
+	bool bEnabled;
 	SerialOutput * echo;
 	char inputBuffer[2];
 	bool eol;
