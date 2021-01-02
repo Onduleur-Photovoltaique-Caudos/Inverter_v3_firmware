@@ -44,7 +44,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>false</Plot>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
         <IsFavorite>false</IsFavorite>
       </LiveVariable>
@@ -104,7 +104,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>false</Plot>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
         <IsFavorite>false</IsFavorite>
       </LiveVariable>
@@ -116,7 +116,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>false</Plot>
+        <Plot>true</Plot>
         <IsCollapsed>false</IsCollapsed>
         <IsFavorite>false</IsFavorite>
       </LiveVariable>
@@ -134,18 +134,6 @@
       </LiveVariable>
       <LiveVariable>
         <Expression>harmonicDistortion</Expression>
-        <Type>com.sysprogs.types.builtin.Float32</Type>
-        <Enabled>true</Enabled>
-        <Breakpoint>
-          <ComparisonMode>Equals</ComparisonMode>
-          <Enabled>false</Enabled>
-        </Breakpoint>
-        <Plot>false</Plot>
-        <IsCollapsed>false</IsCollapsed>
-        <IsFavorite>false</IsFavorite>
-      </LiveVariable>
-      <LiveVariable>
-        <Expression>error_integral</Expression>
         <Type>com.sysprogs.types.builtin.Float32</Type>
         <Enabled>true</Enabled>
         <Breakpoint>
@@ -212,7 +200,7 @@
           <ComparisonMode>Equals</ComparisonMode>
           <Enabled>false</Enabled>
         </Breakpoint>
-        <Plot>true</Plot>
+        <Plot>false</Plot>
         <IsCollapsed>false</IsCollapsed>
         <IsFavorite>false</IsFavorite>
       </LiveVariable>
@@ -308,7 +296,7 @@
         <State>
           <IsFavorite>false</IsFavorite>
           <IsLive>false</IsLive>
-          <LastUsed>132528848697821473</LastUsed>
+          <LastUsed>132528941932132750</LastUsed>
         </State>
       </HardwareRegisterRecord>
     </HardwareRegisters>

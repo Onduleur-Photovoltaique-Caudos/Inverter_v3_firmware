@@ -60,6 +60,8 @@ void doLoop(void){
 	char message[100];
 	float harmonicDistortion;
 	while (true){
+
+		HAL_GPIO_WritePin(Disable_GPIO_Port, Disable_Pin, GPIO_PIN_RESET);
 	
 		peekProcessCommand();
 

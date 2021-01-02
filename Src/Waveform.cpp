@@ -271,7 +271,7 @@ static void adjustPower(float adjustment)
 
 void doAdjustPower(){	
 	harmonicDistortion=compute3HD();
-	adjustPower(TARGET_HD - harmonicDistortion + error_integral * 0.1f);
+	adjustPower(TARGET_HD - harmonicDistortion);
 }
 
 static bool bFanSpeedIsDefined;

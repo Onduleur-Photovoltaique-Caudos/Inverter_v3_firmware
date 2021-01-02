@@ -3,6 +3,7 @@ extern "C" {
 }
 
 #include "Serial.h"
+#include "gpio.h"
 #include <string.h>
 
 SerialInput * SerialInput::channel_1 = NULL;
@@ -10,6 +11,25 @@ SerialInput * SerialInput::channel_2 = NULL;
 SerialOutput * SerialOutput::channel_1 = NULL;
 SerialOutput * SerialOutput::channel_2 = NULL;
 
+void SerialErrorHandler(int nReason,int nSecondary=0)
+{
+	doLedOff();
+	delay_us_DWT(2000000);
+	for (int i=0;i< nReason;i++){
+		doLedOn();
+		delay_us_DWT(200000);
+		doLedOff();
+		delay_us_DWT(500000);
+		}
+	delay_us_DWT(2000000);
+	for (int i = 0; i < nSecondary; i++) {
+		doLedOn();
+		delay_us_DWT(200000);
+		doLedOff();
+		delay_us_DWT(500000);
+	}
+	Error_Handler();
+}
 void cpp_Error_Handler(char * x,int line){
 	Error_Handler();
 }
@@ -27,7 +47,7 @@ SerialInput::SerialInput(UART_HandleTypeDef * pHandle, char * buffer, unsigned i
 	if (pHandle == &huart2) {
 		SerialInput::channel_2 = this;
 	} else {
-		Error_Handler();
+		SerialErrorHandler(1);
 	}
 }
 
@@ -42,6 +62,9 @@ char * SerialInput::fgets(char * str, int size)
 
 char *  SerialInput::fgetsNonBlocking(char * str, int size)
 {
+	if (! bInitialized){
+		return NULL;
+	}
 	while (!eol && ((driverBufferNextChar - driverBuffer) < size)) {
 		return NULL;
 	}
@@ -66,6 +89,9 @@ cleanup:
 
 void SerialInput::doInputIT(void)
 {
+	if (!bInitialized) {
+		return;
+	}
 	char c = inputBuffer[0];
 	if (echo) {
 		echo->putch(c);
@@ -95,7 +121,8 @@ void SerialInput::doInputIT(void)
 	}
 	HAL_StatusTypeDef status = HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1);
 	if (status != HAL_OK) {
-		Error_Handler();
+		bInitialized = false;
+		//SerialErrorHandler(2);
 	}
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
@@ -104,7 +131,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 	if (UartHandle == &huart2) {
 		serialObject  = SerialInput::channel_2;
 	} else {
-		Error_Handler();
+		SerialErrorHandler(3);
 	}
 	serialObject->doInputIT();
 }
@@ -116,7 +143,7 @@ SerialOutput::SerialOutput(UART_HandleTypeDef * pHandle, char * driverBuffer, un
 	if(pHandle == &huart2){
 		SerialOutput::channel_2 = this;
 	} else {
-		Error_Handler();
+		SerialErrorHandler(4);
 	}
 }
 
@@ -165,7 +192,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 	if (UartHandle == &huart2) {
 		serialObject  = SerialOutput::channel_2;
 	} else {
-		Error_Handler();
+		SerialErrorHandler(5);
 	}
 	serialObject->doOutputIT();
 }
@@ -174,11 +201,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
 //  HAL_UART_ERROR_NONE      = 0x00,    /*!< No error            */
 //	HAL_UART_ERROR_PE        = 0x01,    /*!< Parity error        */
-//	HAL_UART_ERROR_NE        = 0x02,    /*!< Noise error         */
-//	HAL_UART_ERROR_FE        = 0x04,    /*!< frame error         */
+//	HAL_UART_ERROR_NE        = 0x02,    /*!< Noise error  happens if not connected       */
+//	HAL_UART_ERROR_FE        = 0x04,    /*!< frame error  happens if not connected       */
 //	HAL_UART_ERROR_ORE       = 0x08,    /*!< Overrun error       */
 //	HAL_UART_ERROR_DMA       = 0x10,    /*!< DMA transfer error  */
 //	HAL_UART_ERROR_BUSY      = 0x20     /*!< Busy Error          */
-	static int nLastError = huart->ErrorCode;
-	//Error_Handler();
+	nLastError = huart->ErrorCode;
+//	SerialErrorHandler(6, nLastError);
 }

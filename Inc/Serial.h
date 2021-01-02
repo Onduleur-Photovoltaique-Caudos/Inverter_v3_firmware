@@ -32,14 +32,17 @@ public:
 	UART_HandleTypeDef *pHandle;
 };
 
+static volatile int nLastError;
 
 class SerialInput {
 public:
 	SerialInput(UART_HandleTypeDef * pHandle, char * buffer, unsigned int size);
 	void initialize(SerialOutput * echoChannel=NULL) {
-		if (HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1) != HAL_OK) {
-			Error_Handler();
+		if (HAL_UART_Receive(pHandle, (uint8_t *)inputBuffer, 1, 1000) != HAL_OK) {
+			nLastError = pHandle->ErrorCode;
+			bInitialized = false;
 		}
+		bInitialized = true;
 		echo = echoChannel;
 	}
 	void doInputIT();
@@ -50,6 +53,7 @@ public:
 	static SerialInput * channel_2;
 	static SerialInput * channel_3;
 
+	bool bInitialized;
 	SerialOutput * echo;
 	char inputBuffer[2];
 	bool eol;
