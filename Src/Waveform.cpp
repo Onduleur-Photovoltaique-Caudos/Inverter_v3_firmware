@@ -88,9 +88,16 @@ void recordTim1()
 
 static int nHalfStepCountdown;
 static bool bPendingSetRt;
+
 bool doNextWaveformSegment()
 {
 	bool bZeroCrossing = false;
+
+//	if (bPrepareZeroCrossing){
+//		bPrepareZeroCrossing = false;
+//		doStartTim1AtZeroCrossing();
+//	}
+
 
 	previousWaveformIndex = waveformIndex;
 	if (bIncreasing) {
@@ -131,7 +138,7 @@ bool doNextWaveformSegment()
 	}
 
 	if (getACState()) {
-		  // AC sine waveform generation
+		// AC sine waveform generation
 		//setRt((iCosine[previousWaveformIndex] + iCosine[waveformIndex]) *60/100 *getPowerLimit() / 100);
 		doPsenseOn();
 		nHalfStepCountdown = -1;
@@ -185,7 +192,7 @@ bool doWaveformStep()
 		bZeroCrossing = doNextWaveformSegment();
 		if (bZeroCrossing) {
 			bUpDown = !bUpDown;
-			doSyncSerialToggle();
+			//doSyncSerialToggle();
 			//doLedOn();
 			//doPsenseOn();
 			//doTemperatureAcquisitionStep();
@@ -212,6 +219,7 @@ void doStartAC()
 { // start from idle at middle of waveform (zero crossing)
 	waveformIndex = zeroCrossingWaveformIndex;
 
+	doLedOn();
 	doResetUpDown();
 	doResetHalfStep();
 	bPositive = true;
@@ -219,7 +227,8 @@ void doStartAC()
 	setACState(true);
 	setACWanted(true);
 	doStartTim1AtZeroCrossing();
-	//doPsensePulse();
+	doResetTim3();
+	doLedOff();
 }
 
 void setMaxPower(int newMax)

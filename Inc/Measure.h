@@ -29,6 +29,7 @@ char * getMeasureStats(int what,char* message);
 int getMeasurementRecordCount();
 float getMeasurementNextRecord();
 void reEnableTripRecording();
+bool setPrepareAC(bool newValue);
 
 float getIIN();
 

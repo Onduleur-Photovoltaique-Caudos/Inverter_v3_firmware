@@ -118,6 +118,7 @@ void Error_Handler(void);
 #define SYNC_SERIAL_GPIO_Port GPIOC
 #define Psense_Pin GPIO_PIN_2
 #define Psense_GPIO_Port GPIOD
+#define Psense_EXTI_IRQn EXTI2_TSC_IRQn
 /* USER CODE BEGIN Private defines */
 extern volatile int mutexStats;
 void start_us_DWT(int slot);

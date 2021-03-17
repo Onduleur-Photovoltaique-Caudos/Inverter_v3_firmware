@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -43,9 +43,9 @@ void MX_TIM1_Init(void);
 void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM15_Init(void);
-                        
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                                                            
+
 /* USER CODE BEGIN Prototypes */
 
 void setTim1ZeroCrossingOffset(uint32_t offset);
@@ -56,6 +56,7 @@ void doSwitchDown();
 void doPlanSwitch();
 void doStartTim1AtZeroCrossing();
 void doRestartTim2Tim3();
+void doResetTim3();
 void setFanPWM(unsigned short rT);
 void	 setOutputSlowSwitch(bool bPositive);
 void setChannelDelayTime(int newChannelDelayTime);

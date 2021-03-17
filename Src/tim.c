@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -356,12 +356,12 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**TIM1 GPIO Configuration    
+    /**TIM1 GPIO Configuration
     PF0 / OSC_IN     ------> TIM1_CH3N
     PC0     ------> TIM1_CH1
     PC1     ------> TIM1_CH2
     PB13     ------> TIM1_CH1N
-    PA12     ------> TIM1_CH2N 
+    PA12     ------> TIM1_CH2N
     */
     GPIO_InitStruct.Pin = Fan_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -400,10 +400,10 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
   /* USER CODE BEGIN TIM2_MspPostInit 0 */
  
   /* USER CODE END TIM2_MspPostInit 0 */
-  
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**TIM2 GPIO Configuration    
-    PA5     ------> TIM2_CH1 
+    /**TIM2 GPIO Configuration
+    PA5     ------> TIM2_CH1
     */
     GPIO_InitStruct.Pin = Led_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -421,11 +421,11 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
   /* USER CODE BEGIN TIM3_MspPostInit 0 */
 
   /* USER CODE END TIM3_MspPostInit 0 */
-  
+
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    /**TIM3 GPIO Configuration    
+    /**TIM3 GPIO Configuration
     PC6     ------> TIM3_CH1
-    PC7     ------> TIM3_CH2 
+    PC7     ------> TIM3_CH2
     */
     GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -516,7 +516,7 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
   /* USER CODE END TIM15_MspDeInit 1 */
   }
-} 
+}
 
 /* USER CODE BEGIN 1 */
 
@@ -587,6 +587,16 @@ void doPlanSwitch()
 	pTim1->CCR1 = 1+ newPeriod / 2;
 }
 
+
+void doStartTim1AtZeroCrossing()
+{
+	TIM_TypeDef *pTim1 = htim1.Instance;
+	uint32_t  tmpcr1 = pTim1->CR1;
+	tmpcr1 &= ~TIM_CR1_DIR;  // make sure we start counting up
+	pTim1->CR1 = tmpcr1;
+	pTim1->CNT = -500 + periodTim1 / 2;	
+}
+
 void doRestartTim2Tim3()
 {
 	TIM_TypeDef *pTim2 = htim2.Instance;
@@ -600,6 +610,15 @@ void doRestartTim2Tim3()
 #endif
 }
 
+void doResetTim3()
+{
+	TIM_TypeDef *pTim3 = htim2.Instance;
+#if 1
+	pTim3->CNT = 2;
+#else
+	pTim3->EGR =  TIM_EGR_UG; // clear all and generate update event
+#endif
+}
 
 uint32_t getTim1Cnt()
 {
@@ -610,17 +629,6 @@ void setTim1ZeroCrossingOffset(uint32_t offset)
 	TIM_TypeDef *pTim1 = htim1.Instance; 
 	pTim1->CNT = offset + periodTim1 / 2;
 }
-
-void doStartTim1AtZeroCrossing()
-{
-	TIM_TypeDef *pTim1 = htim1.Instance;
-	pTim1->CNT = 1000 + periodTim1 / 2;	
-
-	uint32_t  tmpcr1 = pTim1->CR1;
-    tmpcr1 &= ~TIM_CR1_DIR; // make sure we start counting up
-	pTim1->CR1 = tmpcr1;
-}
-
 
 
 void setChannelDelayTime(int newChannelDelayTime)

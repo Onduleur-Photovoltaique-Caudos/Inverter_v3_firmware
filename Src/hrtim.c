@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -253,18 +253,18 @@ void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef* hrtimHandle)
   /* USER CODE BEGIN HRTIM1_MspPostInit 0 */
 
   /* USER CODE END HRTIM1_MspPostInit 0 */
-  
+
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**HRTIM1 GPIO Configuration    
+    /**HRTIM1 GPIO Configuration
     PB12     ------> HRTIM1_CHC1
     PC8     ------> HRTIM1_CHE1
     PA8     ------> HRTIM1_CHA1
     PA9     ------> HRTIM1_CHA2
     PA10     ------> HRTIM1_CHB1
     PA11     ------> HRTIM1_CHB2
-    PB3     ------> HRTIM1_SCOUT 
+    PB3     ------> HRTIM1_SCOUT
     */
     GPIO_InitStruct.Pin = C_175_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -315,7 +315,7 @@ void HAL_HRTIM_MspDeInit(HRTIM_HandleTypeDef* hrtimHandle)
 
   /* USER CODE END HRTIM1_MspDeInit 1 */
   }
-} 
+}
 
 /* USER CODE BEGIN 1 */
 #define setupCompare(n) 	compareCfg; \

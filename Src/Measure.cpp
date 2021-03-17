@@ -476,10 +476,23 @@ float getInputVoltage(){
 	return fM_VIN;
 }
 
+static volatile bool bPrepareAC;
+bool setPrepareAC(bool newValue)
+{
+	bool bPreviousValue = bPrepareAC;
+	bPrepareAC = newValue;
+	return bPreviousValue;
+}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim1) {
-		//doResetWaveform();
+		// once per 50Hz period
+		if(bPrepareAC){
+			doStartAC();
+			bPrepareAC = false;
+		}
+			doSyncSerialToggle();
+			//doResetWaveform();
 	} else if (htim == &htim3) {
 
 		Error_Handler();

@@ -137,6 +137,7 @@ bool getACState()
 	return stateAC;
 }
 
+
 static bool lastACstate;  // we remember last AC, so we can 
 
 bool isACWanted()
@@ -147,13 +148,25 @@ bool isACWanted()
 void doAC(int newState)
 {
 	if (newState) {
-		doStartAC();
+		setPrepareAC(true);
 	} else {
 		setACWanted(false);
 	}
 }
 
-	bool isRun()
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == GPIO_PIN_2) {
+		if (HAL_GPIO_ReadPin(Psense_GPIO_Port, Psense_Pin) == GPIO_PIN_SET) {
+			doAC(true);
+		} else {
+			doAC(false);
+		}
+	}
+}
+
+bool isRun()
 {
 //debug mode for lab tests: FORCE_RUN:1
 #define FORCE_RUN 1

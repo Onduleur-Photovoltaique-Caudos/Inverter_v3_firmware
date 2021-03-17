@@ -125,7 +125,7 @@ void SerialInput::doInputIT(void)
 	}
 	HAL_StatusTypeDef status = HAL_UART_Receive_IT(pHandle, (uint8_t *)inputBuffer, 1);
 	if (status != HAL_OK) {
-		bEnabled = false;
+		//bEnabled = false;
 		//SerialErrorHandler(2);
 	}
 }
@@ -214,9 +214,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 	if (huart == &huart2) {
 		SerialInput * serialObject;
 		serialObject  = SerialInput::channel_2;
-#define ERROR_TEXT "\r\nSerial input error: disabled\r\n"
+#define ERROR_TEXT "\r\nSerial input error\r\n"
 		HAL_UART_Transmit(huart, (uint8_t*)ERROR_TEXT, strlen(ERROR_TEXT), 1000);
-		serialObject->disable();
+		//serialObject->disable();
 	} else {
 		SerialErrorHandler(6, nLastError);
 	}

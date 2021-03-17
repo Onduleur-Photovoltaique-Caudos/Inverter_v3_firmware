@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -37,9 +37,9 @@ extern HRTIM_HandleTypeDef hhrtim1;
 /* USER CODE END Private defines */
 
 void MX_HRTIM1_Init(void);
-                        
+
 void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
-                    
+
 /* USER CODE BEGIN Prototypes */
 void setCompareMaster1(int newValue);
 void setCompareA1(int newValue);

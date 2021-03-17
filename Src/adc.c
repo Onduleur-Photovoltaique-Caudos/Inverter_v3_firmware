@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -34,7 +34,7 @@ void MX_ADC1_Init(void)
   ADC_MultiModeTypeDef multimode = {0};
   ADC_ChannelConfTypeDef sConfig = {0};
 
-  /** Common config 
+  /** Common config
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV1;
@@ -54,7 +54,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure the ADC multi-mode 
+  /** Configure the ADC multi-mode
   */
   multimode.Mode = ADC_DUALMODE_REGSIMULT;
   multimode.DMAAccessMode = ADC_DMAACCESSMODE_12_10_BITS;
@@ -63,7 +63,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -75,7 +75,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = ADC_REGULAR_RANK_2;
@@ -83,7 +83,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_8;
   sConfig.Rank = ADC_REGULAR_RANK_3;
@@ -91,7 +91,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = ADC_REGULAR_RANK_4;
@@ -99,7 +99,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_12;
   sConfig.Rank = ADC_REGULAR_RANK_5;
@@ -107,7 +107,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
   sConfig.Rank = ADC_REGULAR_RANK_6;
@@ -116,7 +116,7 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_VREFINT;
   sConfig.Rank = ADC_REGULAR_RANK_7;
@@ -131,7 +131,7 @@ void MX_ADC2_Init(void)
 {
   ADC_ChannelConfTypeDef sConfig = {0};
 
-  /** Common config 
+  /** Common config
   */
   hadc2.Instance = ADC2;
   hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV1;
@@ -149,7 +149,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -161,7 +161,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_2;
@@ -169,7 +169,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_3;
@@ -177,7 +177,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = ADC_REGULAR_RANK_4;
@@ -185,7 +185,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_12;
   sConfig.Rank = ADC_REGULAR_RANK_5;
@@ -193,7 +193,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_14;
   sConfig.Rank = ADC_REGULAR_RANK_6;
@@ -202,7 +202,7 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_15;
   sConfig.Rank = ADC_REGULAR_RANK_7;
@@ -229,16 +229,16 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     if(HAL_RCC_ADC12_CLK_ENABLED==1){
       __HAL_RCC_ADC12_CLK_ENABLE();
     }
-  
+
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**ADC1 GPIO Configuration    
+    /**ADC1 GPIO Configuration
     PC2     ------> ADC1_IN8
     PA0     ------> ADC1_IN1
     PA1     ------> ADC1_IN2
     PB0     ------> ADC1_IN11
-    PB1     ------> ADC1_IN12 
+    PB1     ------> ADC1_IN12
     */
     GPIO_InitStruct.Pin = M_IHFL_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -286,18 +286,18 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     if(HAL_RCC_ADC12_CLK_ENABLED==1){
       __HAL_RCC_ADC12_CLK_ENABLE();
     }
-  
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**ADC2 GPIO Configuration    
+    /**ADC2 GPIO Configuration
     PA6     ------> ADC2_IN3
     PA7     ------> ADC2_IN4
     PC4     ------> ADC2_IN5
     PC5     ------> ADC2_IN11
     PB2     ------> ADC2_IN12
     PB14     ------> ADC2_IN14
-    PB15     ------> ADC2_IN15 
+    PB15     ------> ADC2_IN15
     */
     GPIO_InitStruct.Pin = M_V175_Pin|M_IHOUT_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -333,13 +333,13 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     if(HAL_RCC_ADC12_CLK_ENABLED==0){
       __HAL_RCC_ADC12_CLK_DISABLE();
     }
-  
-    /**ADC1 GPIO Configuration    
+
+    /**ADC1 GPIO Configuration
     PC2     ------> ADC1_IN8
     PA0     ------> ADC1_IN1
     PA1     ------> ADC1_IN2
     PB0     ------> ADC1_IN11
-    PB1     ------> ADC1_IN12 
+    PB1     ------> ADC1_IN12
     */
     HAL_GPIO_DeInit(M_IHFL_GPIO_Port, M_IHFL_Pin);
 
@@ -373,15 +373,15 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     if(HAL_RCC_ADC12_CLK_ENABLED==0){
       __HAL_RCC_ADC12_CLK_DISABLE();
     }
-  
-    /**ADC2 GPIO Configuration    
+
+    /**ADC2 GPIO Configuration
     PA6     ------> ADC2_IN3
     PA7     ------> ADC2_IN4
     PC4     ------> ADC2_IN5
     PC5     ------> ADC2_IN11
     PB2     ------> ADC2_IN12
     PB14     ------> ADC2_IN14
-    PB15     ------> ADC2_IN15 
+    PB15     ------> ADC2_IN15
     */
     HAL_GPIO_DeInit(GPIOA, M_V175_Pin|M_IHOUT_Pin);
 
@@ -402,7 +402,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
   /* USER CODE END ADC2_MspDeInit 1 */
   }
-} 
+}
 
 /* USER CODE BEGIN 1 */
 void enableADCIT_EOC(ADC_HandleTypeDef* adcHandle){

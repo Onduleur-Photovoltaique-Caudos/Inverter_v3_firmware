@@ -112,7 +112,7 @@ void prvGetRegistersFromStack(uint32_t *pulFaultStackAddress)
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M4 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M4 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -258,6 +258,20 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles EXTI line 2 and touch sense controller.
+  */
+void EXTI2_TSC_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI2_TSC_IRQn 0 */
+
+  /* USER CODE END EXTI2_TSC_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+  /* USER CODE BEGIN EXTI2_TSC_IRQn 1 */
+
+  /* USER CODE END EXTI2_TSC_IRQn 1 */
+}
 
 /**
   * @brief This function handles DMA1 channel1 global interrupt.
