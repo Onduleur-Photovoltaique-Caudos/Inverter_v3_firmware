@@ -106,6 +106,7 @@ bool doNextWaveformSegment()
 		waveformIndex--;
 	}
 
+	
 	if (previousWaveformIndex == (WAVEFORM_SEGMENTS * 10	 / 32)) {
 		 // measure harmonic 3 of input voltage here
 		 if (bIncreasing){
@@ -114,6 +115,7 @@ bool doNextWaveformSegment()
 			fVH3D = fmax(fM_VOUT1, fM_VOUT2);
 		}
 	}
+	
 	if (previousWaveformIndex <= 0) {
 		// measure peak of input voltage here
 		fVH3M = fmax(fM_VOUT1, fM_VOUT2);
@@ -219,7 +221,7 @@ void doStartAC()
 { // start from idle at middle of waveform (zero crossing)
 	waveformIndex = zeroCrossingWaveformIndex;
 
-	doLedOn();
+
 	doResetUpDown();
 	doResetHalfStep();
 	bPositive = true;
@@ -228,7 +230,6 @@ void doStartAC()
 	setACWanted(true);
 	doStartTim1AtZeroCrossing();
 	doResetTim3();
-	doLedOff();
 }
 
 void setMaxPower(int newMax)
