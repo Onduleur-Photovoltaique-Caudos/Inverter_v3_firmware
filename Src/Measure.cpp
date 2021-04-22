@@ -516,17 +516,14 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) // same as HAL_TIM
 		if(0 && doneADC)
 		{
 			// here some processing if needed
-			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_SET);
 			delay_us_DWT(1);
-			HAL_GPIO_WritePin(Sync_GPIO_Port, Sync_Pin, GPIO_PIN_RESET);
 			return;
 		}
-	} else if (htim == &htim3) {
+	} else if (htim == &htim3) { //htim3 triggers the waveform step
 	
-		//htim3 triggers the waveform step
-		delay_us_DWT(1); // need 1us delay to avoir glitch
+		delay_us_DWT(2); // need 1us delay to avoir glitch
 		doLedOn();
-		doWaveformStep();
+		doWaveformStep(); // 40us
 		doLedOff();
 	} else if (htim == &htim2){
 // not used

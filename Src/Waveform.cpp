@@ -141,34 +141,30 @@ bool doNextWaveformSegment()
 
 	if (getACState()) {
 		// AC sine waveform generation
-		//setRt((iCosine[previousWaveformIndex] + iCosine[waveformIndex]) *60/100 *getPowerLimit() / 100);
-		doPsenseOn();
-		nHalfStepCountdown = -1;
-		setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+		setRt((iCosine[previousWaveformIndex] + (iCosine[waveformIndex] - iCosine[previousWaveformIndex])*60/100) *getPowerLimit() / 100);
+		doSyncSerialOn();
+		nHalfStepCountdown = 2;
 		bPendingSetRt = true;
 	}
 	return bZeroCrossing;
 }
 
 
-void executeSetRt()
-{
-	if (bPendingSetRt){
-		doPsenseOff();
-		bPendingSetRt = false;
-		setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
-	}
-}
-
 void doSecondHalfStep()
 {
-	if (nHalfStepCountdown==0) {
+	if (nHalfStepCountdown>0) {
 		if (getACState()) {
-			doPsenseOff();
-			setRt((iCosine[waveformIndex])*getPowerLimit() / 100);
+			doSyncSerialOff();
+			switch (nHalfStepCountdown) {
+			case 2:
+				setRt((iCosine[previousWaveformIndex] + (iCosine[waveformIndex] - iCosine[previousWaveformIndex]) * 85 / 100) *getPowerLimit() / 100);
+				break;
+			case 1:
+				setRt((iCosine[previousWaveformIndex] + (iCosine[waveformIndex] - iCosine[previousWaveformIndex]) * 100 / 100) *getPowerLimit() / 100);
+			}
 		}
 	}
-	if (nHalfStepCountdown > -1) {
+	if (nHalfStepCountdown > 0) {
 		nHalfStepCountdown--;
 	}
 }
