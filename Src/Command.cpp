@@ -34,9 +34,9 @@ typedef enum _runState {
 
 volatile RunState runState;
 
-volatile bool stateACWanted;    // want to produce AC waveform
+volatile bool stateACWanted=true;    // want to produce AC waveform
 
-volatile bool stateAC;  // producing AC waveform
+volatile bool stateAC=true;  // producing AC waveform
 volatile t_breakerState breakerState = eNormal;
 volatile unsigned long long runDelayTimerStartTick;
 
@@ -154,14 +154,21 @@ void doAC(int newState)
 	}
 }
 
+// external sync interrupt
+float phaseTarget = 0.5;
+volatile float phase=0.0;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == GPIO_PIN_2) {
 		if (HAL_GPIO_ReadPin(Psense_GPIO_Port, Psense_Pin) == GPIO_PIN_SET) {
-			doAC(true);
+			phase = 0.9f* phase + 0.1f *getTim1Phase();
+			float phaseDifference = phase - phaseTarget - 1.0f;
+			float correction = - phaseDifference *2 ;
+			int registerValue = 16 + correction;
+			__HAL_RCC_HSI_CALIBRATIONVALUE_ADJUST(registerValue);
 		} else {
-			doAC(false);
+
 		}
 	}
 }

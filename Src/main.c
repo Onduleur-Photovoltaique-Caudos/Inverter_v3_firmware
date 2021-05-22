@@ -316,7 +316,7 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
   /* USART2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(USART2_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(USART2_IRQn);
 }
 

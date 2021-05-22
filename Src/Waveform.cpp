@@ -60,18 +60,25 @@ float fnowPowerAdjust = 100;
 bool bIncreasing = true;
 
 typedef struct  {
-	uint32_t cnt;
+	uint32_t value;
 	uint32_t occurences;
 } tim1Stat;
 
 #define MAX_TIM1_STATS 10
-tim1Stat tim1Stats[MAX_TIM1_STATS];
-unsigned int tim1StatsOverflow;
-void recordTim1()
+volatile bool bStatsInitialized=false;
+volatile tim1Stat tim1Stats[MAX_TIM1_STATS];
+volatile unsigned int tim1StatsOverflow;
+void recordValueInStats(uint32_t value)
 {
-	uint32_t cnt = getTim1Cnt();
-	for (int i = 0; i < MAX_TIM1_STATS; i++){
-		if (tim1Stats[i].cnt == cnt) {
+	if (!bStatsInitialized){
+		bStatsInitialized = true;
+		for (int i = 0; i < MAX_TIM1_STATS; i++) {
+			tim1Stats[i].value = 0;
+			tim1Stats[i].occurences = 0;
+		}
+	}
+	for (int i = 0; i < MAX_TIM1_STATS; i++) {
+		if (tim1Stats[i].value == value) {
 			tim1Stats[i].occurences++;
 			return;
 		}
@@ -79,11 +86,19 @@ void recordTim1()
 	for (int i = 0; i < MAX_TIM1_STATS; i++) {
 		if (tim1Stats[i].occurences == 0) {
 			tim1Stats[i].occurences++;
-			tim1Stats[i].cnt = cnt;
+			tim1Stats[i].value = value;
 			return;
 		}
 	}
 	tim1StatsOverflow++;
+}
+
+	void recordTim1()
+{
+	uint32_t cnt = getTim1Cnt();
+	recordValueInStats(cnt);
+	bool dir = getTim1Direction();
+	recordValueInStats(dir);
 }
 
 static int nHalfStepCountdown;
@@ -106,6 +121,7 @@ bool doNextWaveformSegment()
 		waveformIndex--;
 	}
 
+	delay_us_DWT(3);
 	
 	if (previousWaveformIndex == (WAVEFORM_SEGMENTS * 10	 / 32)) {
 		 // measure harmonic 3 of input voltage here
@@ -124,14 +140,18 @@ bool doNextWaveformSegment()
 		if (waveformIndex >= WAVEFORM_SEGMENTS / 2) {
 			if (!bPositive) {
 			#if 0
-				setTim1ZeroCrossingOffset(-100);
+				setTim1ZeroCrossingOffset(-1800);
 			#else
-				recordTim1();
+				static int countTim1 = 0;
+				if (countTim1++ < 200) {
+					recordTim1();
+				}
 			#endif
 			}
 			bIncreasing = false;
 			bPositive = !bPositive;
 			bZeroCrossing = true;
+			//recordTim1();
 		}
 	} else {
 		if (waveformIndex <= 0) {

@@ -624,7 +624,17 @@ uint32_t getTim1Cnt()
 {
 	return htim1.Instance->CNT;
 }
-void setTim1ZeroCrossingOffset(uint32_t offset)
+
+bool getTim1Direction()
+{
+	return (htim1.Instance->CR1 & TIM_CR1_DIR) != 0;
+}
+
+float getTim1Phase() // between -0.0f and 2.0f
+{
+	1.0f * getTim1Cnt() / periodTim1  + (getTim1Direction() ? 1.0f : 0.0f);
+}
+	void setTim1ZeroCrossingOffset(uint32_t offset)
 {
 	TIM_TypeDef *pTim1 = htim1.Instance; 
 	pTim1->CNT = offset + periodTim1 / 2;

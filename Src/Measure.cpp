@@ -522,9 +522,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) // same as HAL_TIM
 	} else if (htim == &htim3) { //htim3 triggers the waveform step
 	
 		delay_us_DWT(2); // need 1us delay to avoir glitch
-		doLedOn();
 		doWaveformStep(); // 40us
-		doLedOff();
 	} else if (htim == &htim2){
 // not used
 	} else  {

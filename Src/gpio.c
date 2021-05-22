@@ -76,19 +76,33 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = Psense_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Psense_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 
 }
 
 /* USER CODE BEGIN 2 */
 
-void doPsenseOutput()
+void doInitPsenseAsInterrupt()
+{
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+	/*Configure GPIO pin : PtPin */
+	GPIO_InitStruct.Pin = Psense_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	HAL_GPIO_Init(Psense_GPIO_Port, &GPIO_InitStruct);
+
+	/* EXTI interrupt init*/
+	HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
+	}
+
+	void doPsenseOutput()
 {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 

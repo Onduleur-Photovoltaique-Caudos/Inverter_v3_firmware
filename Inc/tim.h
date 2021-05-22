@@ -50,6 +50,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 void setTim1ZeroCrossingOffset(uint32_t offset);
 uint32_t getTim1Cnt();
+bool getTim1Direction();
+float getTim1Phase();
 void doSwitchOff();
 void doSwitchUp();
 void doSwitchDown();
