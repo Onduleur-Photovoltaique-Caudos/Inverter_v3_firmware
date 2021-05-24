@@ -227,6 +227,30 @@
         <IsCollapsed>false</IsCollapsed>
         <IsFavorite>false</IsFavorite>
       </LiveVariable>
+      <LiveVariable>
+        <Expression>correction</Expression>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
+        <Enabled>true</Enabled>
+        <Breakpoint>
+          <ComparisonMode>Equals</ComparisonMode>
+          <Enabled>false</Enabled>
+        </Breakpoint>
+        <Plot>false</Plot>
+        <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
+      </LiveVariable>
+      <LiveVariable>
+        <Expression>phaseDifference</Expression>
+        <Type>com.sysprogs.types.builtin.Float32</Type>
+        <Enabled>true</Enabled>
+        <Breakpoint>
+          <ComparisonMode>Equals</ComparisonMode>
+          <Enabled>false</Enabled>
+        </Breakpoint>
+        <Plot>false</Plot>
+        <IsCollapsed>false</IsCollapsed>
+        <IsFavorite>false</IsFavorite>
+      </LiveVariable>
     </LiveVariables>
     <NestedLiveVariables>
       <NestedVariableSettingsCollection>
@@ -235,128 +259,7 @@
       </NestedVariableSettingsCollection>
       <NestedVariableSettingsCollection>
         <ID>com.sysprogs.SpecificVariables</ID>
-        <Variables>
-          <LiveVariable>
-            <Expression>tim1Stats[0]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[1]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[2]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[3]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[4]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[5]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[6]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[7]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[8]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-          <LiveVariable>
-            <Expression>tim1Stats[9]</Expression>
-            <Type>com.sysprogs.types.builtin.UInt64</Type>
-            <Enabled>true</Enabled>
-            <Breakpoint>
-              <ComparisonMode>Equals</ComparisonMode>
-              <Enabled>false</Enabled>
-            </Breakpoint>
-            <Plot>false</Plot>
-            <IsCollapsed>false</IsCollapsed>
-            <IsFavorite>false</IsFavorite>
-          </LiveVariable>
-        </Variables>
+        <Variables />
       </NestedVariableSettingsCollection>
     </NestedLiveVariables>
     <Suggestions>
@@ -530,7 +433,7 @@
         <State>
           <IsFavorite>false</IsFavorite>
           <IsLive>false</IsLive>
-          <LastUsed>132661980243205725</LastUsed>
+          <LastUsed>132661989021584111</LastUsed>
         </State>
       </HardwareRegisterRecord>
       <HardwareRegisterRecord>

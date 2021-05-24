@@ -13,7 +13,7 @@ extern "C"
 #include "hrtim.h"
 #include "tim.h"
 #include "stdlib.h"
-
+#include <cmath>
 
 #include "Serial.h"
 
@@ -158,14 +158,25 @@ void doAC(int newState)
 float phaseTarget = 0.5;
 volatile float phase=0.0;
 
+volatile float correction=0.5;
+volatile float phaseDifference;
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == GPIO_PIN_2) {
 		if (HAL_GPIO_ReadPin(Psense_GPIO_Port, Psense_Pin) == GPIO_PIN_SET) {
-			phase = 0.9f* phase + 0.1f *getTim1Phase();
-			float phaseDifference = phase - phaseTarget - 1.0f;
-			float correction = - phaseDifference *2 ;
-			int registerValue = 16 + correction;
+			phase = getTim1Phase();
+			// phase =getTim1Phase();
+			phaseDifference = phase - phaseTarget;
+			if (phaseDifference < -1.0f) {
+				phaseDifference += 2.0f;
+			}
+			if (phaseDifference < -1.0f) {
+				phaseDifference += 2.0f;
+			}
+			float phaseComp = std::fabs(phaseDifference);
+			correction = phaseComp; // LP filter
+			int registerValue = 0.5+  31 * correction;
 			__HAL_RCC_HSI_CALIBRATIONVALUE_ADJUST(registerValue);
 		} else {
 
