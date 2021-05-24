@@ -155,11 +155,12 @@ void doAC(int newState)
 }
 
 // external sync interrupt
-float phaseTarget = 0.5;
+const float phaseTarget = 1.66f;
 volatile float phase=0.0;
 
-volatile float correction=0.5;
+volatile float correction;
 volatile float phaseDifference;
+volatile float cumulDifference = 0.0;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -171,12 +172,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			if (phaseDifference < -1.0f) {
 				phaseDifference += 2.0f;
 			}
-			if (phaseDifference < -1.0f) {
-				phaseDifference += 2.0f;
+			if (phaseDifference > 1.0f) {
+				phaseDifference -= 2.0f;
 			}
-			float phaseComp = std::fabs(phaseDifference);
-			correction = phaseComp; // LP filter
-			int registerValue = 0.5+  31 * correction;
+			//float phaseComp = std::fabs(phaseDifference) - 0.5f;
+			float phaseComp = phaseDifference/2.0f;
+			cumulDifference += 0.1 * phaseComp;
+			//correction = 0.9* correction + 0.1 *phaseComp; // LP filter
+			correction = phaseComp;
+			correction += cumulDifference;
+			int registerValue = 16 +  31 * correction;
 			__HAL_RCC_HSI_CALIBRATIONVALUE_ADJUST(registerValue);
 		} else {
 

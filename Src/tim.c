@@ -633,8 +633,8 @@ bool getTim1Direction()
 float getTim1Phase() // between -0.0f and 2.0f
 {
 	float result= 1.0f * getTim1Cnt() / periodTim1;
-	if (getTim1Direction()){
-		result += 1.0f;
+	if (!getTim1Direction()){
+		result = 2.0f - result;
 	}
 	return result;
 }
